@@ -5,7 +5,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <span v-if="errored">:{{ customEmojiName }}:</span>
-<img v-else :class="[$style.root, { [$style.normal]: normal, [$style.noStyle]: noStyle }]" :src="url" :alt="alt" :title="alt" decoding="async" @error="errored = true" @load="errored = false"/>
+<img v-else @contextmenu.stop="onContextMenu" :class="[$style.root, { [$style.normal]: normal, [$style.noStyle]: noStyle }]" :src="url" :alt="alt" :title="alt" decoding="async" @error="errored = true" @load="errored = false"/>
 </template>
 
 <script lang="ts" setup>
@@ -13,6 +13,9 @@ import { computed } from 'vue';
 import { getProxiedImageUrl, getStaticImageUrl } from '@/scripts/media-proxy';
 import { defaultStore } from '@/store';
 import { customEmojisMap } from '@/custom-emojis';
+import * as os from '@/os'
+import {i18n} from "@/i18n";
+import {$i} from "@/account";
 
 const props = defineProps<{
 	name: string;
@@ -55,6 +58,37 @@ const url = computed(() => {
 
 const alt = computed(() => `:${customEmojiName.value}:`);
 let errored = $ref(url.value == null);
+
+const onContextMenu = (e: MouseEvent) => {
+  if (props.host && $i && ($i.isAdmin || $i.policies.canManageCustomEmojis)) {
+    os.contextMenu([
+      {
+        text: i18n.ts.import,
+        icon: 'ti ti-plus',
+        action: async () => {
+          const id = ((await os.api('admin/emoji/list-remote', {
+            host: props.host,
+            name: props.name
+          })) as { id: string }[])[0]?.id
+          const localId = ((await os.api('admin/emoji/list', {
+            name: props.name
+          })) as { id: string }[])[0]?.id
+          if (localId) {
+            await os.alert({ type: 'error', title: 'Emoji already exists' })
+            return
+          }
+          if (!id) {
+            await os.alert({ type: 'error', title: 'Emoji not found' })
+            return
+          }
+          await os.apiWithDialog('admin/emoji/copy', {
+            emojiId: id,
+          });
+        }
+      }
+    ], e)
+  }
+}
 </script>
 
 <style lang="scss" module>
