@@ -68,10 +68,11 @@ const onContextMenu = (e: MouseEvent) => {
         action: async () => {
           const id = ((await os.api('admin/emoji/list-remote', {
             host: props.host,
-            name: props.name
+            query: props.name
           })) as { id: string }[])[0]?.id
           const localId = ((await os.api('admin/emoji/list', {
-            name: props.name
+            query: props.name,
+            limit: 1
           })) as { id: string }[])[0]?.id
           if (localId) {
             await os.alert({ type: 'error', title: 'Emoji already exists' })
