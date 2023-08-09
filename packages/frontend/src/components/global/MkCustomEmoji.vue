@@ -60,7 +60,7 @@ const alt = computed(() => `:${customEmojiName.value}:`);
 let errored = $ref(url.value == null);
 
 const onContextMenu = (e: MouseEvent) => {
-  if (props.host && $i && ($i.isAdmin || $i.policies.canManageCustomEmojis)) {
+  if ($i && ($i.isAdmin || $i.policies.canManageCustomEmojis)) {
     os.contextMenu([
       {
         text: i18n.ts.import,

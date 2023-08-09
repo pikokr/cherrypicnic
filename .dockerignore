@@ -31,3 +31,5 @@ packages/*/.vscode/
 packages/backend/test/docker-compose.yml
 
 .pnpm-store/
+
+data/
