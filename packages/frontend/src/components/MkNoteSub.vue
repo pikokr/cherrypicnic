@@ -39,6 +39,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</template>
 	</I18n>
 </div>
+  <div v-else :class="$style.muted" @click="muted = false">
+    <I18n :src="i18n.ts.userSaysSomething" tag="small">
+      <template #name>
+        <MkA v-user-preview="note.userId" :to="userPage(note.user)">
+          <MkUserName :user="note.user"/>
+        </MkA>
+      </template>
+    </I18n>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -55,6 +64,8 @@ import { $i } from '@/account';
 import { userPage } from '@/filters/user';
 import { checkWordMute } from '@/scripts/check-word-mute';
 import { defaultStore } from '@/store';
+import {checkWordMute} from "@/scripts/check-word-mute";
+import {userPage} from "@/filters/user";
 
 let hideLine = $ref(false);
 
@@ -72,6 +83,8 @@ const muted = ref(checkWordMute(props.note, $i, defaultStore.state.mutedWords));
 
 let showContent = $ref(false);
 let replies: Misskey.entities.Note[] = $ref([]);
+
+const muted = ref(checkWordMute(props.note, $i, defaultStore.state.mutedWords));
 
 if (props.detail) {
 	os.api('notes/children', {
