@@ -66,24 +66,9 @@ const onContextMenu = (e: MouseEvent) => {
         text: i18n.ts.import,
         icon: 'ti ti-plus',
         action: async () => {
-          const id = ((await os.api('admin/emoji/list-remote', {
-            host: props.host,
-            query: props.name
-          })) as { id: string; name: string }[]).find(x=>x.name === props.name)?.id
-          const localId = ((await os.api('admin/emoji/list', {
-            query: props.name,
-            limit: 1
-          })) as { id: string, name: string }[]).find(x=>x.name === props.name)?.id
-          if (localId) {
-            await os.alert({ type: 'error', title: 'Emoji already exists' })
-            return
-          }
-          if (!id) {
-            await os.alert({ type: 'error', title: 'Emoji not found' })
-            return
-          }
-          await os.apiWithDialog('admin/emoji/copy', {
-            emojiId: id,
+          await os.apiWithDialog('admin/emoji/steal', {
+						name: customEmojiName.value,
+						host: props.host,
           });
         }
       }
