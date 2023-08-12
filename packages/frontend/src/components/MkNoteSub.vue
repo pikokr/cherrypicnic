@@ -4,7 +4,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<div :class="[$style.root, { [$style.children]: depth > 1 }]">
+<div v-if="!muted" :class="[$style.root, { [$style.children]: depth > 1 }]">
 	<div v-if="!defaultStore.state.hideAvatarsInNote && !hideLine" :class="$style.line"></div>
 	<div :class="$style.main">
 		<div v-if="note.channel" :class="$style.colorBar" :style="{ background: note.channel.color }"></div>
@@ -30,10 +30,19 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<MkA class="_link" :to="notePage(note)">{{ i18n.ts.continueThread }} <i class="ti ti-chevron-double-right"></i></MkA>
 	</div>
 </div>
+  <div v-else :class="$style.muted" @click="muted = false">
+    <I18n :src="i18n.ts.userSaysSomething" tag="small">
+      <template #name>
+        <MkA v-user-preview="note.userId" :to="userPage(note.user)">
+          <MkUserName :user="note.user"/>
+        </MkA>
+      </template>
+    </I18n>
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { } from 'vue';
+import {ref} from 'vue';
 import * as misskey from 'cherrypick-js';
 import MkNoteHeader from '@/components/MkNoteHeader.vue';
 import MkSubNoteContent from '@/components/MkSubNoteContent.vue';
@@ -44,6 +53,8 @@ import * as os from '@/os';
 import { i18n } from '@/i18n';
 import { $i } from '@/account';
 import { defaultStore } from '@/store';
+import {checkWordMute} from "@/scripts/check-word-mute";
+import {userPage} from "@/filters/user";
 
 let hideLine = $ref(false);
 
@@ -59,6 +70,8 @@ const props = withDefaults(defineProps<{
 
 let showContent = $ref(false);
 let replies: misskey.entities.Note[] = $ref([]);
+
+const muted = ref(checkWordMute(props.note, $i, defaultStore.state.mutedWords));
 
 if (props.detail) {
 	os.api('notes/children', {
@@ -186,4 +199,14 @@ if (props.detail) {
 		height: 46px;
 	}
 }
+
+.muted {
+  padding: 8px !important;
+  text-align: center;
+  opacity: 0.7;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 12px;
+  border-radius: 8px;
+}
+
 </style>
