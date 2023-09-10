@@ -64,7 +64,6 @@ import { $i } from '@/account';
 import { userPage } from '@/filters/user';
 import { checkWordMute } from '@/scripts/check-word-mute';
 import { defaultStore } from '@/store';
-import {checkWordMute} from "@/scripts/check-word-mute";
 import {userPage} from "@/filters/user";
 
 let hideLine = $ref(false);
