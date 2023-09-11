@@ -82,8 +82,6 @@ const muted = ref(checkWordMute(props.note, $i, defaultStore.state.mutedWords));
 let showContent = $ref(false);
 let replies: Misskey.entities.Note[] = $ref([]);
 
-const muted = ref(checkWordMute(props.note, $i, defaultStore.state.mutedWords));
-
 if (props.detail) {
 	os.api('notes/children', {
 		noteId: props.note.id,
