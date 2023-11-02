@@ -329,7 +329,10 @@ export type Endpoints = {
 	'federation/users': { req: { host: string; limit?: number; sinceId?: User['id']; untilId?: User['id']; }; res: UserDetailed[]; };
 
 	// following
-	'following/create': { req: { userId: User['id'] }; res: User; };
+	'following/create': { req: {
+		userId: User['id'],
+		withReplies?: boolean,
+	}; res: User; };
 	'following/delete': { req: { userId: User['id'] }; res: User; };
 	'following/requests/accept': { req: { userId: User['id'] }; res: null; };
 	'following/requests/cancel': { req: { userId: User['id'] }; res: User; };
@@ -379,7 +382,6 @@ export type Endpoints = {
 	'i/favorites': { req: { limit?: number; sinceId?: NoteFavorite['id']; untilId?: NoteFavorite['id']; }; res: NoteFavorite[]; };
 	'i/gallery/likes': { req: TODO; res: TODO; };
 	'i/gallery/posts': { req: TODO; res: TODO; };
-	'i/get-word-muted-notes-count': { req: TODO; res: TODO; };
 	'i/import-following': { req: TODO; res: TODO; };
 	'i/import-user-lists': { req: TODO; res: TODO; };
 	'i/move': { req: TODO; res: TODO; };
@@ -438,7 +440,7 @@ export type Endpoints = {
 		receiveAnnouncementEmail?: boolean;
 		alwaysMarkNsfw?: boolean;
 		mutedWords?: string[][];
-		mutingNotificationTypes?: Notification['type'][];
+		notificationRecieveConfig?: any;
 		emailNotificationTypes?: string[];
 		alsoKnownAs?: string[];
 	}; res: MeDetailed; };
@@ -525,6 +527,7 @@ export type Endpoints = {
 		}
 	}; res: { createdNote: Note }; };
 	'notes/delete': { req: { noteId: Note['id']; }; res: null; };
+	'notes/update': { req: { noteId: Note['id']; text?: null | string; cw?: null | string; }; res: null; };
 	'notes/favorites/create': { req: { noteId: Note['id']; }; res: null; };
 	'notes/favorites/delete': { req: { noteId: Note['id']; }; res: null; };
 	'notes/featured': { req: TODO; res: Note[]; };
@@ -563,6 +566,7 @@ export type Endpoints = {
 
 	// notifications
 	'notifications/create': { req: { body: string; header?: string | null; icon?: string | null; }; res: null; };
+	'notifications/test-notification': { req: NoParams; res: null; };
 	'notifications/mark-all-as-read': { req: NoParams; res: null; };
 
 	// page-push
@@ -665,4 +669,11 @@ export type Endpoints = {
 			$default: UserDetailed;
 		};
 	}; };
+
+	// fetching external data
+	'fetch-rss': { req: { url: string; }; res: TODO; };
+	'fetch-external-resources': {
+		req: { url: string; hash: string; };
+		res: { type: string; data: string; };
+	};
 };

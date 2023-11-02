@@ -37,7 +37,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <XStreamIndicator/>
 
-<div v-if="pendingApiRequestsCount > 0" id="wait"></div>
+<div v-if="pendingApiRequestsCount > 0" id="wait">
+	<svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+		<circle cx="25" cy="25" r="20" fill="none" stroke-width="6px" style="fill: none; stroke-width: 6px;"></circle>
+	</svg>
+</div>
 
 <div v-if="dev" id="devTicker"><span>DEV BUILD</span></div>
 
@@ -49,13 +53,15 @@ import { defineAsyncComponent, ref } from 'vue';
 import * as Misskey from 'cherrypick-js';
 import { swInject } from './sw-inject';
 import XNotification from './notification.vue';
-import { popups, pendingApiRequestsCount } from '@/os';
-import { uploads } from '@/scripts/upload';
-import * as sound from '@/scripts/sound';
-import { $i } from '@/account';
-import { useStream } from '@/stream';
-import { i18n } from '@/i18n';
-import { defaultStore } from '@/store';
+import { popups, pendingApiRequestsCount } from '@/os.js';
+import { uploads } from '@/scripts/upload.js';
+import * as sound from '@/scripts/sound.js';
+import { $i } from '@/account.js';
+import { useStream } from '@/stream.js';
+import { i18n } from '@/i18n.js';
+import { ColdDeviceStorage, defaultStore } from '@/store.js';
+import { globalEvents } from '@/events.js';
+import { vibrate } from '@/scripts/vibrate.js';
 
 const XStreamIndicator = defineAsyncComponent(() => import('./stream-indicator.vue'));
 const XUpload = defineAsyncComponent(() => import('./upload.vue'));
@@ -64,11 +70,12 @@ const dev = _DEV_;
 
 let notifications = $ref<Misskey.entities.Notification[]>([]);
 
-function onNotification(notification) {
-	if ($i.mutingNotificationTypes.includes(notification.type)) return;
-
+function onNotification(notification: Misskey.entities.Notification, isClient = false) {
 	if (document.visibilityState === 'visible') {
-		useStream().send('readNotification');
+		if (!isClient && notification.type !== 'test') {
+			// サーバーサイドのテスト通知の際は自動で既読をつけない（テストできないので）
+			useStream().send('readNotification');
+		}
 
 		notifications.unshift(notification);
 		window.setTimeout(() => {
@@ -81,11 +88,13 @@ function onNotification(notification) {
 	}
 
 	sound.play('notification');
+	vibrate(ColdDeviceStorage.get('vibrateNotification') ? [20, 30, 30, 30] : '');
 }
 
 if ($i) {
 	const connection = useStream().useChannel('main', null, 'UI');
 	connection.on('notification', onNotification);
+	globalEvents.on('clientNotification', notification => onNotification(notification, true));
 
 	//#region Listen message from SW
 	if ('serviceWorker' in navigator) {
@@ -215,6 +224,21 @@ if ($i) {
 	}
 }
 
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -35;
+  }
+  100% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -124;
+  }
+}
+
 #wait {
 	display: block;
 	position: fixed;
@@ -223,18 +247,19 @@ if ($i) {
 	right: 15px;
 	pointer-events: none;
 
-	&:before {
-		content: "";
-		display: block;
-		width: 18px;
-		height: 18px;
-		box-sizing: border-box;
-		border: solid 2px transparent;
-		border-top-color: var(--accent);
-		border-left-color: var(--accent);
-		border-radius: 50%;
-		animation: progress-spinner 400ms linear infinite;
-	}
+  > svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    box-sizing: border-box;
+    animation: progress-spinner 2s linear infinite;
+  }
+
+  > svg > circle {
+    stroke: var(--accent);
+    stroke-linecap: round;
+    animation: dash 1.2s ease-in-out infinite;
+  }
 }
 
 #botWarn {

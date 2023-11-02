@@ -6,9 +6,9 @@
 import ms from 'ms';
 import { Inject, Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
-import type { BlockingsRepository, UserGroupJoiningsRepository, DriveFilesRepository, UserGroupsRepository } from '@/models/index.js';
-import type { MiUser } from '@/models/entities/User.js';
-import type { MiUserGroup } from '@/models/entities/UserGroup.js';
+import type { BlockingsRepository, UserGroupJoiningsRepository, DriveFilesRepository, UserGroupsRepository } from '@/models/_.js';
+import type { MiUser } from '@/models/User.js';
+import type { MiUserGroup } from '@/models/UserGroup.js';
 import { GetterService } from '@/server/api/GetterService.js';
 import { MessagingService } from '@/core/MessagingService.js';
 import { DI } from '@/di-symbols.js';
@@ -110,8 +110,8 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private messagingService: MessagingService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
-			let recipientUser: MiUser | null;
-			let recipientGroup: MiUserGroup | null;
+			let recipientUser: MiUser | null = null;
+			let recipientGroup: MiUserGroup | null = null;
 
 			if (ps.userId != null) {
 				// Myself

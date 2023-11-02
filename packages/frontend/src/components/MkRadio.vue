@@ -6,6 +6,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <div
 	v-adaptive-border
+	v-vibrate="ColdDeviceStorage.get('vibrateSystem') ? 5 : ''"
 	:class="[$style.root, { [$style.disabled]: disabled, [$style.checked]: checked }]"
 	:aria-checked="checked"
 	:aria-disabled="disabled"
@@ -25,6 +26,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { } from 'vue';
+import { ColdDeviceStorage } from '@/store.js';
 
 const props = defineProps<{
 	modelValue: any;

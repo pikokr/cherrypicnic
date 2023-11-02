@@ -17,17 +17,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 	See https://github.com/misskey-dev/misskey/issues/10905
 -->
 <div v-if="showBottom" :class="$style.bottom">
-	<button v-tooltip="i18n.ts.goToMisskey" :class="['_button', '_shadow', $style.button]" @click="goToMisskey"><i class="ti ti-home"></i></button>
+	<button v-vibrate="ColdDeviceStorage.get('vibrateSystem') ? 5 : ''" v-tooltip="i18n.ts.goToMisskey" :class="['_button', '_shadow', $style.button]" @click="goToMisskey"><i class="ti ti-home"></i></button>
 </div>
 </template>
 
 <script lang="ts" setup>
 import { provide, ComputedRef } from 'vue';
 import XCommon from './_common_/common.vue';
-import { mainRouter } from '@/router';
-import { PageMetadata, provideMetadataReceiver } from '@/scripts/page-metadata';
-import { instanceName, ui } from '@/config';
-import { i18n } from '@/i18n';
+import { mainRouter } from '@/router.js';
+import { PageMetadata, provideMetadataReceiver } from '@/scripts/page-metadata.js';
+import { instanceName, ui } from '@/config.js';
+import { i18n } from '@/i18n.js';
+import { ColdDeviceStorage } from '@/store.js';
 
 let pageMetadata = $ref<null | ComputedRef<PageMetadata>>();
 

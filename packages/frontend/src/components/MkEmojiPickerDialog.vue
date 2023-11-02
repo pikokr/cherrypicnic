@@ -19,8 +19,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 >
 	<MkEmojiPicker
 		ref="picker"
-		class="_popup _shadow"
-		:class="{ [$style.drawer]: type === 'drawer' }"
+		class="_shadow"
+		:class="{ [$style.drawer]: type === 'drawer', _popup: !defaultStore.state.useBlurEffect || !defaultStore.state.useBlurEffectForModal || !defaultStore.state.removeModalBgColorForBlur, _popupAcrylic: defaultStore.state.useBlurEffect && defaultStore.state.useBlurEffectForModal && defaultStore.state.removeModalBgColorForBlur }"
 		:showPinned="showPinned"
 		:asReactionPicker="asReactionPicker"
 		:asDrawer="type === 'drawer'"
@@ -34,7 +34,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { shallowRef } from 'vue';
 import MkModal from '@/components/MkModal.vue';
 import MkEmojiPicker from '@/components/MkEmojiPicker.vue';
-import { defaultStore } from '@/store';
+import { defaultStore } from '@/store.js';
 
 withDefaults(defineProps<{
 	manualShowing?: boolean | null;

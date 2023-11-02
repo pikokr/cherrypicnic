@@ -6,8 +6,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Brackets } from 'typeorm';
 import { Endpoint } from '@/server/api/endpoint-base.js';
-import type { MiMessagingMessage } from '@/models/entities/MessagingMessage.js';
-import type { MutingsRepository, UserGroupJoiningsRepository, MessagingMessagesRepository } from '@/models/index.js';
+import type { MiMessagingMessage } from '@/models/MessagingMessage.js';
+import type { MutingsRepository, UserGroupJoiningsRepository, MessagingMessagesRepository } from '@/models/_.js';
 import { MessagingMessageEntityService } from '@/core/entities/MessagingMessageEntityService.js';
 import { DI } from '@/di-symbols.js';
 
@@ -73,7 +73,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					: history.map(m => (m.userId === me.id) ? m.recipientId! : m.userId!);
 
 				const query = this.messagingMessagesRepository.createQueryBuilder('message')
-					.orderBy('message.createdAt', 'DESC');
+					.orderBy('message.id', 'DESC');
 
 				if (ps.group) {
 					query.where('message.groupId IN (:...groups)', { groups: groups });
@@ -82,9 +82,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 						query.andWhere('message.groupId NOT IN (:...found)', { found: found });
 					}
 				} else {
-					query.where(new Brackets(qb => { qb
-						.where('message.userId = :userId', { userId: me.id })
-						.orWhere('message.recipientId = :userId', { userId: me.id });
+					query.where(new Brackets(qb => {
+						qb
+							.where('message.userId = :userId', { userId: me.id })
+							.orWhere('message.recipientId = :userId', { userId: me.id });
 					}));
 					query.andWhere('message.groupId IS NULL');
 

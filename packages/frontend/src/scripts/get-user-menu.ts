@@ -6,17 +6,17 @@
 import { toUnicode } from 'punycode';
 import { defineAsyncComponent, ref, watch } from 'vue';
 import * as Misskey from 'cherrypick-js';
-import { i18n } from '@/i18n';
-import copyToClipboard from '@/scripts/copy-to-clipboard';
-import { host, url } from '@/config';
-import * as os from '@/os';
-import { defaultStore, userActions } from '@/store';
-import { $i, iAmModerator } from '@/account';
-import { mainRouter } from '@/router';
-import { Router } from '@/nirax';
-import { antennasCache, rolesCache, userListsCache } from '@/cache';
-import { editNickname } from '@/scripts/edit-nickname';
-import { eventBus } from '@/scripts/cherrypick/eventBus';
+import { i18n } from '@/i18n.js';
+import copyToClipboard from '@/scripts/copy-to-clipboard.js';
+import { host, url } from '@/config.js';
+import * as os from '@/os.js';
+import { defaultStore, userActions } from '@/store.js';
+import { $i, iAmModerator } from '@/account.js';
+import { mainRouter } from '@/router.js';
+import { Router } from '@/nirax.js';
+import { antennasCache, rolesCache, userListsCache } from '@/cache.js';
+import { editNickname } from '@/scripts/edit-nickname.js';
+import { globalEvents } from '@/events.js';
 
 export function getUserMenu(user: Misskey.entities.UserDetailed, router: Router = mainRouter) {
 	const meId = $i ? $i.id : null;
@@ -104,6 +104,24 @@ export function getUserMenu(user: Misskey.entities.UserDetailed, router: Router 
 		});
 	}
 
+	async function toggleWithReplies() {
+		os.apiWithDialog('following/update', {
+			userId: user.id,
+			withReplies: !user.withReplies,
+		}).then(() => {
+			user.withReplies = !user.withReplies;
+		});
+	}
+
+	async function toggleNotify() {
+		os.apiWithDialog('following/update', {
+			userId: user.id,
+			notify: user.notify === 'normal' ? 'none' : 'normal',
+		}).then(() => {
+			user.notify = user.notify === 'normal' ? 'none' : 'normal';
+		});
+	}
+
 	function reportAbuse() {
 		os.popup(defineAsyncComponent(() => import('@/components/MkAbuseReportWindow.vue')), {
 			user: user,
@@ -111,12 +129,7 @@ export function getUserMenu(user: Misskey.entities.UserDetailed, router: Router 
 	}
 
 	function refreshUser() {
-		eventBus.emit('refreshUser');
-	}
-
-	async function updateRemoteUser() {
-		await os.apiWithDialog('federation/update-remote-user', { userId: user.id });
-		refreshUser();
+		globalEvents.emit('refreshUser');
 	}
 
 	async function getConfirmed(text: string): Promise<boolean> {
@@ -127,6 +140,12 @@ export function getUserMenu(user: Misskey.entities.UserDetailed, router: Router 
 		});
 
 		return !confirm.canceled;
+	}
+
+	async function userInfoUpdate() {
+		os.apiWithDialog('federation/update-remote-user', {
+			userId: user.id,
+		});
 	}
 
 	async function invalidateFollow() {
@@ -196,8 +215,8 @@ export function getUserMenu(user: Misskey.entities.UserDetailed, router: Router 
 		type: 'link',
 		icon: 'ti ti-messages',
 		text: i18n.ts.startMessaging,
-		to: '/my/messaging/${user.id}',
-	} : undefined, meId !== user.id ? {
+		to: `/my/messaging/@${user.host === null ? user.username : user.username + '@' + user.host}`,
+	} : undefined, meId !== user.id && user.host === null ? {
 		icon: 'ti ti-users',
 		text: i18n.ts.inviteToGroup,
 		action: inviteGroup,
@@ -210,15 +229,13 @@ export function getUserMenu(user: Misskey.entities.UserDetailed, router: Router 
 	}] : []), {
 		icon: 'ti ti-pencil',
 		text: i18n.ts.editMemo,
-		action: () => {
-			editMemo();
-		},
+		action: editMemo,
 	}, {
 		type: 'parent',
 		icon: 'ti ti-list',
 		text: i18n.ts.addToList,
 		children: async () => {
-			const lists = await userListsCache.fetch(() => os.api('users/lists/list'));
+			const lists = await userListsCache.fetch();
 			return lists.map(list => {
 				const isListed = ref(list.userIds.includes(user.id));
 				cleanups.push(watch(isListed, () => {
@@ -251,7 +268,7 @@ export function getUserMenu(user: Misskey.entities.UserDetailed, router: Router 
 		icon: 'ti ti-antenna',
 		text: i18n.ts.addToAntenna,
 		children: async () => {
-			const antennas = await antennasCache.fetch(() => os.api('antennas/list'));
+			const antennas = await antennasCache.fetch();
 			const canonical = user.host === null ? `@${user.username}` : `@${user.username}@${toUnicode(user.host)}`;
 			return antennas.filter((a) => a.src === 'users').map(antenna => ({
 				text: antenna.name,
@@ -282,7 +299,7 @@ export function getUserMenu(user: Misskey.entities.UserDetailed, router: Router 
 				icon: 'ti ti-badges',
 				text: i18n.ts.roles,
 				children: async () => {
-					const roles = await rolesCache.fetch(() => os.api('admin/roles/list'));
+					const roles = await rolesCache.fetch();
 
 					return roles.filter(r => r.target === 'manual').map(r => ({
 						text: r.name,
@@ -318,6 +335,19 @@ export function getUserMenu(user: Misskey.entities.UserDetailed, router: Router 
 			}]);
 		}
 
+		// フォローしたとしても user.isFollowing はリアルタイム更新されないので不便なため
+		//if (user.isFollowing) {
+		menu = menu.concat([{
+			icon: user.withReplies ? 'ti ti-messages-off' : 'ti ti-messages',
+			text: user.withReplies ? i18n.ts.hideRepliesToOthersInTimeline : i18n.ts.showRepliesToOthersInTimeline,
+			action: toggleWithReplies,
+		}, {
+			icon: user.notify === 'none' ? 'ti ti-bell' : 'ti ti-bell-off',
+			text: user.notify === 'none' ? i18n.ts.notifyNotes : i18n.ts.unnotifyNotes,
+			action: toggleNotify,
+		}]);
+		//}
+
 		menu = menu.concat([null, {
 			icon: user.isMuted ? 'ti ti-eye' : 'ti ti-eye-off',
 			text: user.isMuted ? i18n.ts.unmute : i18n.ts.mute,
@@ -344,6 +374,14 @@ export function getUserMenu(user: Misskey.entities.UserDetailed, router: Router 
 			icon: 'ti ti-exclamation-circle',
 			text: i18n.ts.reportAbuse,
 			action: reportAbuse,
+		}]);
+	}
+
+	if (user.host !== null) {
+		menu = menu.concat([null, {
+			icon: 'ti ti-refresh',
+			text: i18n.ts.updateRemoteUser,
+			action: userInfoUpdate,
 		}]);
 	}
 
@@ -375,14 +413,6 @@ export function getUserMenu(user: Misskey.entities.UserDetailed, router: Router 
 				action.handler(user);
 			},
 		}))]);
-	}
-
-	if ($i && meId !== user.id && user.host != null) {
-		menu = menu.concat([null, {
-			icon: 'ti ti-refresh',
-			text: i18n.ts.updateRemoteUser,
-			action: updateRemoteUser,
-		}]);
 	}
 
 	const cleanup = () => {

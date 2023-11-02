@@ -10,7 +10,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<MkSpacer :contentMax="900">
 			<div class="ogwlenmc">
 				<div v-if="tab === 'local'" class="local">
-					<MkInput v-model="query" :debounce="true" type="search">
+					<MkInput v-model="query" :debounce="true" type="search" autocapitalize="off">
 						<template #prefix><i class="ti ti-search"></i></template>
 						<template #label>{{ i18n.ts.search }}</template>
 					</MkInput>
@@ -44,7 +44,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 				<div v-else-if="tab === 'remote'" class="remote">
 					<FormSplit>
-						<MkInput v-model="queryRemote" :debounce="true" type="search">
+						<MkInput v-model="queryRemote" :debounce="true" type="search" autocapitalize="off">
 							<template #prefix><i class="ti ti-search"></i></template>
 							<template #label>{{ i18n.ts.search }}</template>
 						</MkInput>
@@ -80,10 +80,10 @@ import MkInput from '@/components/MkInput.vue';
 import MkPagination from '@/components/MkPagination.vue';
 import MkSwitch from '@/components/MkSwitch.vue';
 import FormSplit from '@/components/form/split.vue';
-import { selectFile, selectFiles } from '@/scripts/select-file';
-import * as os from '@/os';
-import { i18n } from '@/i18n';
-import { definePageMetadata } from '@/scripts/page-metadata';
+import { selectFile, selectFiles } from '@/scripts/select-file.js';
+import * as os from '@/os.js';
+import { i18n } from '@/i18n.js';
+import { definePageMetadata } from '@/scripts/page-metadata.js';
 
 const emojisPaginationComponent = shallowRef<InstanceType<typeof MkPagination>>();
 
@@ -173,25 +173,25 @@ const remoteMenu = (emoji, ev: MouseEvent) => {
 };
 
 const uploadMenu = (ev: MouseEvent) => {
-  os.popupMenu([{
-    icon: 'ti ti-file',
-    text: i18n.ts.addSingle,
-    action: add,
-  }, {
-    icon: 'ti ti-files',
-    text: i18n.ts.addMultiple,
-    action: async () => {
-      const files = await selectFiles(ev.currentTarget ?? ev.target, null);
+	os.popupMenu([{
+		icon: 'ti ti-file',
+		text: i18n.ts.addSingle,
+		action: add,
+	}, {
+		icon: 'ti ti-files',
+		text: i18n.ts.addMultiple,
+		action: async () => {
+			const files = await selectFiles(ev.currentTarget ?? ev.target, null);
 
-      const promise = Promise.all(files.map(file => os.api('admin/emoji/adds', {
-        fileId: file.id,
-      })));
-      promise.then(() => {
-        emojisPaginationComponent.value.reload();
-      });
-      os.promiseDialog(promise);
-    },
-  }], ev.currentTarget ?? ev.target);
+			const promise = Promise.all(files.map(file => os.api('admin/emoji/adds', {
+				fileId: file.id,
+			})));
+			promise.then(() => {
+				emojisPaginationComponent.value.reload();
+			});
+			os.promiseDialog(promise);
+		},
+	}], ev.currentTarget ?? ev.target);
 };
 
 const menu = (ev: MouseEvent) => {
@@ -309,10 +309,10 @@ const delBulk = async () => {
 };
 
 const headerActions = $computed(() => [{
-  asFullButton: true,
-  icon: 'ti ti-plus',
-  text: i18n.ts.addEmoji,
-  handler: uploadMenu,
+	asFullButton: true,
+	icon: 'ti ti-plus',
+	text: i18n.ts.addEmoji,
+	handler: uploadMenu,
 }, {
 	icon: 'ti ti-dots',
 	handler: menu,

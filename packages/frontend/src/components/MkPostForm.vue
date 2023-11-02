@@ -5,7 +5,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <div
-	:class="[$style.root, { [$style.modal]: modal, _popup: modal }]"
+	:class="[$style.root, { [$style.modal]: modal, _popup: modal && (!defaultStore.state.useBlurEffect || !defaultStore.state.useBlurEffectForModal || !defaultStore.state.removeModalBgColorForBlur), _popupAcrylic: modal && defaultStore.state.useBlurEffect && defaultStore.state.useBlurEffectForModal && defaultStore.state.removeModalBgColorForBlur }]"
 	@dragover.stop="onDragover"
 	@dragenter="onDragenter"
 	@dragleave="onDragleave"
@@ -14,7 +14,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<header :class="$style.header">
 		<div :class="$style.headerLeft">
 			<button v-if="!fixed" :class="$style.cancel" class="_button" @click="cancel"><i class="ti ti-x"></i></button>
-			<button v-click-anime v-tooltip="i18n.ts.switchAccount" :class="$style.account" class="_button" @click="openAccountMenu">
+			<button v-click-anime v-tooltip="i18n.ts.switchAccount" :class="[$style.account, { [$style.fixed]: fixed }]" class="_button" @click="openAccountMenu">
 				<MkAvatar :user="postAccount ?? $i" :class="$style.avatar"/>
 			</button>
 		</div>
@@ -41,12 +41,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<span v-else-if="reactionAcceptance === 'likeOnlyForRemote'"><i class="ti ti-heart-plus"></i></span>
 				<span v-else><i class="ti ti-icons"></i></span>
 			</button>
+			<button v-tooltip="i18n.ts._mfm.cheatSheet" class="_button" :class="$style.headerRightItem" @click="openMfmCheatSheet"><i class="ti ti-help-circle"></i></button>
 			<button v-click-anime class="_button" :class="$style.submit" :disabled="!canPost" data-cy-open-post-form-submit @click="post">
 				<div :class="$style.submitInner">
 					<template v-if="posted"></template>
 					<template v-else-if="posting"><MkEllipsis/></template>
 					<template v-else>{{ submitText }}</template>
-					<i style="margin-left: 6px;" :class="posted ? 'ti ti-check' : reply ? 'ti ti-arrow-back-up' : renote ? 'ti ti-quote' : defaultStore.state.renameTheButtonInPostFormToNya ? 'ti ti-paw-filled' : 'ti ti-send'"></i>
+					<i style="margin-left: 6px;" :class="posted ? 'ti ti-check' : reply ? 'ti ti-arrow-back-up' : renote ? 'ti ti-quote' : updateMode ? 'ti ti-pencil' : defaultStore.state.renameTheButtonInPostFormToNya ? 'ti ti-paw-filled' : 'ti ti-send'"></i>
 				</div>
 			</button>
 		</div>
@@ -74,7 +75,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<input v-show="withHashtags" ref="hashtagsInputEl" v-model="hashtags" :class="$style.hashtags" :placeholder="i18n.ts.hashtags" list="hashtags">
 	<XPostFormAttaches v-model="files" @detach="detachFile" @changeSensitive="updateFileSensitive" @changeName="updateFileName" @replaceFile="replaceFile"/>
 	<MkPollEditor v-if="poll" v-model="poll" @destroyed="poll = null"/>
-	<MkNotePreview v-if="showPreview" :class="$style.preview" :text="text"/>
+	<MkNotePreview v-if="showPreview" :class="$style.preview" :text="text" :user="postAccount ?? $i" :showProfile="showProfilePreview"/>
 	<div v-if="showingOptions" style="padding: 8px 16px;">
 	</div>
 	<footer :class="$style.footer">
@@ -90,7 +91,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<button v-tooltip="i18n.ts.emoji" :class="['_button', $style.footerButton]" @click="insertEmoji"><i class="ti ti-mood-happy"></i></button>
 		</div>
 		<div :class="$style.footerRight">
-			<button v-tooltip="i18n.ts.previewNoteText" class="_button" :class="[$style.footerButton, { [$style.previewButtonActive]: showPreview }]" @click="showPreview = !showPreview"><i class="ti ti-eye"></i></button>
+			<button v-tooltip="i18n.ts.previewNoteText" class="_button" :class="$style.footerButton" @click="showPreviewMenu"><i class="ti ti-eye"></i></button>
 			<!--<button v-tooltip="i18n.ts.more" class="_button" :class="$style.footerButton" @click="showingOptions = !showingOptions"><i class="ti ti-dots"></i></button>-->
 		</div>
 	</footer>
@@ -111,23 +112,25 @@ import MkNotePreview from '@/components/MkNotePreview.vue';
 import XPostFormAttaches from '@/components/MkPostFormAttaches.vue';
 import MkPollEditor from '@/components/MkPollEditor.vue';
 import MkEventEditor from '@/components/MkEventEditor.vue';
-import { host, url } from '@/config';
-import { erase, unique } from '@/scripts/array';
-import { extractMentions } from '@/scripts/extract-mentions';
-import { formatTimeString } from '@/scripts/format-time-string';
-import { Autocomplete } from '@/scripts/autocomplete';
-import * as os from '@/os';
-import { selectFiles } from '@/scripts/select-file';
-import { defaultStore, notePostInterruptors, postFormActions } from '@/store';
+import { host, url } from '@/config.js';
+import { erase, unique } from '@/scripts/array.js';
+import { extractMentions } from '@/scripts/extract-mentions.js';
+import { formatTimeString } from '@/scripts/format-time-string.js';
+import { Autocomplete } from '@/scripts/autocomplete.js';
+import * as os from '@/os.js';
+import { selectFiles } from '@/scripts/select-file.js';
+import { ColdDeviceStorage, defaultStore, notePostInterruptors, postFormActions } from '@/store.js';
 import MkInfo from '@/components/MkInfo.vue';
-import { i18n } from '@/i18n';
-import { instance } from '@/instance';
-import { $i, notesCount, incNotesCount, getAccounts, openAccountMenu as openAccountMenu_ } from '@/account';
-import { uploadFile } from '@/scripts/upload';
-import { deepClone } from '@/scripts/clone';
+import { i18n } from '@/i18n.js';
+import { instance } from '@/instance.js';
+import { $i, notesCount, incNotesCount, getAccounts, openAccountMenu as openAccountMenu_ } from '@/account.js';
+import { uploadFile } from '@/scripts/upload.js';
+import { deepClone } from '@/scripts/clone.js';
 import MkRippleEffect from '@/components/MkRippleEffect.vue';
-import { miLocalStorage } from '@/local-storage';
-import { claimAchievement } from '@/scripts/achievements';
+import { miLocalStorage } from '@/local-storage.js';
+import { claimAchievement } from '@/scripts/achievements.js';
+import { vibrate } from '@/scripts/vibrate.js';
+import * as sound from '@/scripts/sound.js';
 
 const modal = inject('modal');
 
@@ -147,6 +150,7 @@ const props = withDefaults(defineProps<{
 	fixed?: boolean;
 	autofocus?: boolean;
 	freezeAfterPosted?: boolean;
+	updateMode?: boolean;
 }>(), {
 	initialVisibleUsers: () => [],
 	autofocus: true,
@@ -181,7 +185,9 @@ let event = $ref<{
 } | null>(null);
 let useCw = $ref(false);
 let showPreview = $ref(defaultStore.state.showPreview);
+let showProfilePreview = $ref(defaultStore.state.showProfilePreview);
 watch($$(showPreview), () => defaultStore.set('showPreview', showPreview));
+watch($$(showProfilePreview), () => defaultStore.set('showProfilePreview', showProfilePreview));
 let cw = $ref<string | null>(null);
 let localOnly = $ref<boolean>(props.initialLocalOnly ?? defaultStore.state.rememberNoteVisibility ? defaultStore.state.localOnly : defaultStore.state.defaultNoteLocalOnly);
 let visibility = $ref(props.initialVisibility ?? (defaultStore.state.rememberNoteVisibility ? defaultStore.state.visibility : defaultStore.state.defaultNoteVisibility) as typeof Misskey.noteVisibilities[number]);
@@ -214,12 +220,15 @@ const draftKey = $computed((): string => {
 });
 
 const placeholder = $computed((): string => {
+	let postTo = '';
+	postTo = '[' + i18n.ts._visibility[visibility] + '] ';
+
 	if (props.renote) {
-		return i18n.ts._postForm.quotePlaceholder;
+		return postTo + i18n.ts._postForm.quotePlaceholder;
 	} else if (props.reply) {
-		return i18n.ts._postForm.replyPlaceholder;
+		return postTo + i18n.ts._postForm.replyPlaceholder;
 	} else if (props.channel) {
-		return i18n.ts._postForm.channelPlaceholder;
+		return postTo + i18n.ts._postForm.channelPlaceholder;
 	} else {
 		const xs = [
 			i18n.ts._postForm._placeholders.a,
@@ -229,7 +238,7 @@ const placeholder = $computed((): string => {
 			i18n.ts._postForm._placeholders.e,
 			i18n.ts._postForm._placeholders.f,
 		];
-		return xs[Math.floor(Math.random() * xs.length)];
+		return postTo + xs[Math.floor(Math.random() * xs.length)];
 	}
 });
 
@@ -238,9 +247,11 @@ const submitText = $computed((): string => {
 		? i18n.ts.quote
 		: props.reply
 			? i18n.ts.reply
-			: defaultStore.state.renameTheButtonInPostFormToNya
-        ? i18n.ts.nya
-        : i18n.ts.note;
+			: props.updateMode
+				? i18n.ts.edit
+				: defaultStore.state.renameTheButtonInPostFormToNya
+					? i18n.ts.nya
+					: i18n.ts.note;
 });
 
 const textLength = $computed((): number => {
@@ -671,6 +682,8 @@ function onDrop(ev): void {
 }
 
 function saveDraft() {
+	if (props.instant) return;
+
 	const draftData = JSON.parse(miLocalStorage.getItem('drafts') ?? '{}');
 
 	draftData[draftKey] = {
@@ -740,19 +753,20 @@ async function post(ev?: MouseEvent) {
 	}
 
 	let postData = {
-		text: text === '' ? undefined : text,
+		text: text === '' ? null : text,
 		fileIds: files.length > 0 ? files.map(f => f.id) : undefined,
 		replyId: props.reply ? props.reply.id : undefined,
 		renoteId: props.renote ? props.renote.id : quoteId ? quoteId : undefined,
 		channelId: props.channel ? props.channel.id : undefined,
 		poll: poll,
 		event: event,
-		cw: useCw ? cw ?? '' : undefined,
+		cw: useCw ? cw ?? '' : null,
 		localOnly: localOnly,
 		visibility: visibility,
 		visibleUserIds: visibility === 'specified' ? visibleUsers.map(u => u.id) : undefined,
 		reactionAcceptance,
 		disableRightClick: disableRightClick,
+		noteId: props.updateMode ? props.initialNote?.id : undefined,
 	};
 
 	if (withHashtags && hashtags && hashtags.trim() !== '') {
@@ -775,16 +789,20 @@ async function post(ev?: MouseEvent) {
 	}
 
 	posting = true;
-	os.api('notes/create', postData, token).then(() => {
+	os.api(props.updateMode ? 'notes/update' : 'notes/create', postData, token).then(() => {
 		if (props.freezeAfterPosted) {
 			posted = true;
 		} else {
 			clear();
 		}
 		nextTick(() => {
+			if (props.reply) os.noteToast(i18n.ts.replied, 'reply');
+			else if (props.renote) os.noteToast(i18n.ts.quoted, 'quote');
+			else if (props.updateMode) os.noteToast(i18n.ts.noteEdited, 'edited');
+			else os.noteToast(i18n.ts.posted, 'posted');
+
 			deleteDraft();
 			emit('posted');
-			os.noteToast(i18n.ts.posted);
 			if (postData.text && postData.text !== '') {
 				const hashtags_ = mfm.parse(postData.text).filter(x => x.type === 'hashtag').map(x => x.props.hashtag);
 				const history = JSON.parse(miLocalStorage.getItem('hashtags') ?? '[]') as string[];
@@ -842,6 +860,9 @@ async function post(ev?: MouseEvent) {
 			text: err.message + '\n' + (err as any).id,
 		});
 	});
+	textareaEl.style.height = '140px';
+	if (props.updateMode) sound.play('noteEdited');
+	vibrate(ColdDeviceStorage.get('vibrateSystem') ? [10, 20, 10, 20, 10, 20, 60] : '');
 }
 
 function cancel() {
@@ -864,11 +885,17 @@ function showActions(ev) {
 		action: () => {
 			action.handler({
 				text: text,
+				cw: cw,
 			}, (key, value) => {
 				if (key === 'text') { text = value; }
+				if (key === 'cw') { useCw = value !== null; cw = value; }
 			});
 		},
 	})), ev.currentTarget ?? ev.target);
+}
+
+async function openMfmCheatSheet() {
+	os.popup(defineAsyncComponent(() => import('@/components/MkMfmCheatSheetDialog.vue')), {}, {}, 'closed');
 }
 
 let postAccount = $ref<Misskey.entities.UserDetailed | null>(null);
@@ -886,6 +913,20 @@ function openAccountMenu(ev: MouseEvent) {
 			}
 		},
 	}, ev);
+}
+
+function showPreviewMenu(ev: MouseEvent) {
+	os.popupMenu([{
+		type: 'switch',
+		text: i18n.ts.previewNoteText,
+		icon: 'ti ti-eye',
+		ref: $$(showPreview),
+	}, {
+		type: 'switch',
+		text: i18n.ts.previewNoteProfile,
+		icon: 'ti ti-user-circle',
+		ref: $$(showProfilePreview),
+	}], ev.currentTarget ?? ev.target);
 }
 
 onMounted(() => {
@@ -1000,6 +1041,10 @@ defineExpose({
 	display: inline-flex;
 	vertical-align: bottom;
 	flex: 0 1 50px;
+
+  &.fixed {
+    margin: 0 0 0 12px;
+  }
 }
 
 .avatar {

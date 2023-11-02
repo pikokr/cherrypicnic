@@ -27,7 +27,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<MkTextarea v-model="announcement.text">
 						<template #label>{{ i18n.ts.text }}</template>
 					</MkTextarea>
-					<MkInput v-model="announcement.imageUrl">
+					<MkInput v-model="announcement.imageUrl" type="url">
 						<template #label>{{ i18n.ts.imageUrl }}</template>
 					</MkInput>
 					<MkRadios v-model="announcement.icon">
@@ -58,7 +58,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</div>
 			</MkFolder>
 			<MkButton class="button" @click="more()">
-				<i class="ti ti-reload"></i>{{ i18n.ts.more }}
+				<i class="ti ti-reload"></i> {{ i18n.ts.more }}
 			</MkButton>
 		</div>
 	</MkSpacer>
@@ -74,9 +74,9 @@ import MkTextarea from '@/components/MkTextarea.vue';
 import MkSwitch from '@/components/MkSwitch.vue';
 import MkRadios from '@/components/MkRadios.vue';
 import MkInfo from '@/components/MkInfo.vue';
-import * as os from '@/os';
-import { i18n } from '@/i18n';
-import { definePageMetadata } from '@/scripts/page-metadata';
+import * as os from '@/os.js';
+import { i18n } from '@/i18n.js';
+import { definePageMetadata } from '@/scripts/page-metadata.js';
 import MkFolder from '@/components/MkFolder.vue';
 
 let announcements: any[] = $ref([]);

@@ -16,7 +16,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { ref } from 'vue';
-import { i18n } from '@/i18n';
+import { i18n } from '@/i18n.js';
 
 const visible = ref(true);
 
@@ -30,8 +30,8 @@ const emit = defineEmits<{
 }>();
 
 function close() {
-  visible.value = false;
-  emit('closed');
+	visible.value = false;
+	emit('closed');
 }
 </script>
 

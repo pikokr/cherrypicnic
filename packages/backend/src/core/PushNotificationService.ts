@@ -10,7 +10,7 @@ import { DI } from '@/di-symbols.js';
 import type { Config } from '@/config.js';
 import type { Packed } from '@/misc/json-schema.js';
 import { getNoteSummary } from '@/misc/get-note-summary.js';
-import type { MiSwSubscription, SwSubscriptionsRepository } from '@/models/index.js';
+import type { MiSwSubscription, SwSubscriptionsRepository } from '@/models/_.js';
 import { MetaService } from '@/core/MetaService.js';
 import { bindThis } from '@/decorators.js';
 import { RedisKVCache } from '@/misc/cache.js';
@@ -44,7 +44,7 @@ function truncateBody<T extends keyof PushNotificationsTypes>(type: T, body: Pus
 				reply: undefined,
 				renote: undefined,
 				user: type === 'notification' ? undefined as any : body.note.user,
-			}
+			},
 		} : {}),
 	};
 }

@@ -6,17 +6,18 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { In } from 'typeorm';
 import { DI } from '@/di-symbols.js';
-import type { DriveFilesRepository } from '@/models/index.js';
+import type { DriveFilesRepository } from '@/models/_.js';
 import type { Config } from '@/config.js';
 import type { Packed } from '@/misc/json-schema.js';
 import { awaitAll } from '@/misc/prelude/await-all.js';
-import type { MiUser } from '@/models/entities/User.js';
-import type { MiDriveFile } from '@/models/entities/DriveFile.js';
+import type { MiUser } from '@/models/User.js';
+import type { MiDriveFile } from '@/models/DriveFile.js';
 import { appendQuery, query } from '@/misc/prelude/url.js';
 import { deepClone } from '@/misc/clone.js';
 import { bindThis } from '@/decorators.js';
 import { isMimeImage } from '@/misc/is-mime-image.js';
 import { isNotNull } from '@/misc/is-not-null.js';
+import { IdService } from '@/core/IdService.js';
 import { UtilityService } from '../UtilityService.js';
 import { VideoProcessingService } from '../VideoProcessingService.js';
 import { UserEntityService } from './UserEntityService.js';
@@ -44,6 +45,7 @@ export class DriveFileEntityService {
 		private utilityService: UtilityService,
 		private driveFolderEntityService: DriveFolderEntityService,
 		private videoProcessingService: VideoProcessingService,
+		private idService: IdService,
 	) {
 	}
 
@@ -88,7 +90,7 @@ export class DriveFileEntityService {
 		if (file.type.startsWith('video')) {
 			if (file.thumbnailUrl) return file.thumbnailUrl;
 
-			return this.videoProcessingService.getExternalVideoThumbnailUrl(file.webpublicUrl ?? file.url ?? file.uri);
+			return this.videoProcessingService.getExternalVideoThumbnailUrl(file.webpublicUrl ?? file.url);
 		} else if (file.uri != null && file.userHost != null && this.config.externalMediaProxyEnabled) {
 			// 動画ではなくリモートかつメディアプロキシ
 			return this.getProxiedUrl(file.uri, 'static');
@@ -107,7 +109,7 @@ export class DriveFileEntityService {
 	}
 
 	@bindThis
-	public getPublicUrl(file: MiDriveFile, mode?: 'avatar'): string { // static = thumbnail
+	public getPublicUrl(file: MiDriveFile, mode?: 'avatar', ap?: boolean): string { // static = thumbnail
 		// リモートかつメディアプロキシ
 		if (file.uri != null && file.userHost != null && this.config.externalMediaProxyEnabled) {
 			return this.getProxiedUrl(file.uri, mode);
@@ -129,6 +131,16 @@ export class DriveFileEntityService {
 		if (mode === 'avatar') {
 			return this.getProxiedUrl(url, 'avatar');
 		}
+
+		if (ap && this.config.apFileBaseUrl) {
+			const baseUrl = this.config.apFileBaseUrl;
+			const isValidBaseUrl = /^https?:\/\/[\w.-]+\.[a-zA-Z]{2,}(\/.*)?$/i.test(baseUrl);
+			if (isValidBaseUrl) {
+				const trimmedBaseUrl = baseUrl.replace(/\/$/, '');
+				return url.replace(/^https?:\/\/[\w.-]+\.[a-zA-Z]{2,}/, trimmedBaseUrl);
+			}
+		}
+
 		return url;
 	}
 
@@ -143,7 +155,7 @@ export class DriveFileEntityService {
 			.select('SUM(file.size)', 'sum')
 			.getRawOne();
 
-		return parseInt(sum, 10) ?? 0;
+		return parseInt(sum, 10) || 0;
 	}
 
 	@bindThis
@@ -155,7 +167,7 @@ export class DriveFileEntityService {
 			.select('SUM(file.size)', 'sum')
 			.getRawOne();
 
-		return parseInt(sum, 10) ?? 0;
+		return parseInt(sum, 10) || 0;
 	}
 
 	@bindThis
@@ -167,7 +179,7 @@ export class DriveFileEntityService {
 			.select('SUM(file.size)', 'sum')
 			.getRawOne();
 
-		return parseInt(sum, 10) ?? 0;
+		return parseInt(sum, 10) || 0;
 	}
 
 	@bindThis
@@ -179,7 +191,7 @@ export class DriveFileEntityService {
 			.select('SUM(file.size)', 'sum')
 			.getRawOne();
 
-		return parseInt(sum, 10) ?? 0;
+		return parseInt(sum, 10) || 0;
 	}
 
 	@bindThis
@@ -196,7 +208,7 @@ export class DriveFileEntityService {
 
 		return await awaitAll<Packed<'DriveFile'>>({
 			id: file.id,
-			createdAt: file.createdAt.toISOString(),
+			createdAt: this.idService.parse(file.id).date.toISOString(),
 			name: file.name,
 			type: file.type,
 			md5: file.md5,
@@ -231,7 +243,7 @@ export class DriveFileEntityService {
 
 		return await awaitAll<Packed<'DriveFile'>>({
 			id: file.id,
-			createdAt: file.createdAt.toISOString(),
+			createdAt: this.idService.parse(file.id).date.toISOString(),
 			name: file.name,
 			type: file.type,
 			md5: file.md5,

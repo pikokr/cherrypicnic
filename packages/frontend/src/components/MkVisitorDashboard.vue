@@ -60,12 +60,12 @@ import XSignupDialog from '@/components/MkSignupDialog.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkTimeline from '@/components/MkTimeline.vue';
 import MkInfo from '@/components/MkInfo.vue';
-import { instanceName } from '@/config';
-import * as os from '@/os';
-import { i18n } from '@/i18n';
-import { instance } from '@/instance';
-import { mainRouter } from '@/router';
-import number from '@/filters/number';
+import { instanceName } from '@/config.js';
+import * as os from '@/os.js';
+import { i18n } from '@/i18n.js';
+import { instance } from '@/instance.js';
+import { mainRouter } from '@/router.js';
+import number from '@/filters/number.js';
 import MkNumber from '@/components/MkNumber.vue';
 import XActiveUsersChart from '@/components/MkVisitorDashboard.ActiveUsersChart.vue';
 
@@ -106,7 +106,25 @@ function showMenu(ev) {
 		action: () => {
 			os.pageWindow('/about-misskey');
 		},
-	}, null, {
+	}, null, (instance.impressumUrl) ? {
+		text: i18n.ts.impressum,
+		icon: 'ti ti-file-invoice',
+		action: () => {
+			window.open(instance.impressumUrl, '_blank');
+		},
+	} : undefined, (instance.tosUrl) ? {
+		text: i18n.ts.termsOfService,
+		icon: 'ti ti-notebook',
+		action: () => {
+			window.open(instance.tosUrl, '_blank');
+		},
+	} : undefined, (instance.privacyPolicyUrl) ? {
+		text: i18n.ts.privacyPolicy,
+		icon: 'ti ti-shield-lock',
+		action: () => {
+			window.open(instance.privacyPolicyUrl, '_blank');
+		},
+	} : undefined, (!instance.impressumUrl && !instance.tosUrl && !instance.privacyPolicyUrl) ? undefined : null, {
 		text: i18n.ts.help,
 		icon: 'ti ti-help-circle',
 		action: () => {
@@ -116,8 +134,7 @@ function showMenu(ev) {
 }
 
 function exploreOtherServers() {
-	// TODO: 言語をよしなに
-	window.open('https://join.misskey.page/ja-JP/instances', '_blank');
+	window.open('https://join.misskey.page/instances', '_blank');
 }
 </script>
 

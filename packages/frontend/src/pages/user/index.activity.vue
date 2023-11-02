@@ -24,8 +24,8 @@ import { } from 'vue';
 import * as Misskey from 'cherrypick-js';
 import MkContainer from '@/components/MkContainer.vue';
 import MkChart from '@/components/MkChart.vue';
-import * as os from '@/os';
-import { i18n } from '@/i18n';
+import * as os from '@/os.js';
+import { i18n } from '@/i18n.js';
 
 const props = withDefaults(defineProps<{
 	user: Misskey.entities.User;
@@ -49,16 +49,16 @@ function showMenu(ev: MouseEvent) {
 		action: () => {
 			chartSrc = 'per-user-pv';
 		},
-	}, /*, {
+	}, {
 		text: i18n.ts.following,
 		action: () => {
 			chartSrc = 'per-user-following';
-		}
+		},
 	}, {
 		text: i18n.ts.followers,
 		action: () => {
 			chartSrc = 'per-user-followers';
-		}
-	}*/], ev.currentTarget ?? ev.target);
+		},
+	}], ev.currentTarget ?? ev.target);
 }
 </script>

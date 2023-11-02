@@ -10,6 +10,7 @@ import postcss from 'postcss';
 import * as terser from 'terser';
 
 import locales from '../locales/index.js';
+import generateDTS from '../locales/generateDTS.js';
 import meta from '../package.json' assert { type: "json" };
 
 async function copyFrontendFonts() {
@@ -21,6 +22,8 @@ async function copyFrontendTablerIcons() {
 }
 
 async function copyFrontendLocales() {
+  generateDTS();
+
   await fs.mkdir('./built/_frontend_dist_/locales', { recursive: true });
 
   const v = { '_version_': meta.version };
@@ -28,6 +31,13 @@ async function copyFrontendLocales() {
   for (const [lang, locale] of Object.entries(locales)) {
     await fs.writeFile(`./built/_frontend_dist_/locales/${lang}.${meta.version}.json`, JSON.stringify({ ...locale, ...v }), 'utf-8');
   }
+}
+
+async function copyFrontendShikiAssets() {
+  await fs.cp('./packages/frontend/node_modules/shiki/dist', './built/_frontend_dist_/shiki/dist', { dereference: true, recursive: true });
+  await fs.cp('./packages/frontend/node_modules/shiki/languages', './built/_frontend_dist_/shiki/languages', { dereference: true, recursive: true });
+  await fs.cp('./packages/frontend/node_modules/aiscript-vscode/aiscript/syntaxes', './built/_frontend_dist_/shiki/languages', { dereference: true, recursive: true });
+  await fs.cp('./packages/frontend/node_modules/shiki/themes', './built/_frontend_dist_/shiki/themes', { dereference: true, recursive: true });
 }
 
 async function copyBackendViews() {
@@ -69,6 +79,7 @@ async function build() {
     copyFrontendFonts(),
     copyFrontendTablerIcons(),
     copyFrontendLocales(),
+    copyFrontendShikiAssets(),
     copyBackendViews(),
     buildBackendScript(),
     buildBackendStyle(),

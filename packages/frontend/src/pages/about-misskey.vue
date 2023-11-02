@@ -14,6 +14,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<img src="/client-assets/about-icon.png" alt="" class="icon" draggable="false" @load="iconLoaded" @click="gravity"/>
 						<div class="cherrypick">CherryPick</div>
 						<div class="version" @click="whatIsNewCherryPick">v{{ version }}</div>
+						<div class="version" style="font-size: 11px;" @click="whatIsNewMisskey">v{{ basedMisskeyVersion }} (Based on Misskey)</div>
 						<span v-for="emoji in easterEggEmojis" :key="emoji.id" class="emoji" :data-physics-x="emoji.left" :data-physics-y="emoji.top" :class="{ _physics_circle_: !emoji.emoji.startsWith(':') }">
 							<MkCustomEmoji v-if="emoji.emoji[0] === ':'" class="emoji" :name="emoji.emoji" :normal="true" :noStyle="true"/>
 							<MkEmoji v-else class="emoji" :emoji="emoji.emoji" :normal="true" :noStyle="true"/>
@@ -57,21 +58,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 							{{ i18n.ts._aboutMisskey._cherrypick.community }}
 							<template #suffix>Discord</template>
 						</FormLink>
-						<FormLink to="https://www.patreon.com/noridev" external>
-							<template #icon><i class="ti ti-pig-money"></i></template>
-							{{ i18n.ts._aboutMisskey._cherrypick.donate }}
-							<template #suffix>Patreon</template>
-						</FormLink>
-						<FormLink to="https://www.paypal.me/noridev" external>
-							<template #icon><i class="ti ti-pig-money"></i></template>
-							{{ i18n.ts._aboutMisskey._cherrypick.donate }}
-							<template #suffix>PayPal</template>
-						</FormLink>
-						<FormLink to="https://toss.me/noridev" external>
-							<template #icon><i class="ti ti-pig-money"></i></template>
-							{{ i18n.ts._aboutMisskey._cherrypick.donate }}
-							<template #suffix>Toss</template>
-						</FormLink>
+						<button :class="$style.main" class="_button" @click="donateCherryPick">
+							<span :class="$style.icon"><i class="ti ti-pig-money"></i></span>
+							<span :class="$style.text">{{ i18n.ts._aboutMisskey._cherrypick.donate }}</span>
+							<span :class="$style.suffix">
+								<i class="ti ti-external-link"></i>
+							</span>
+						</button>
 					</div>
 				</FormSection>
 				<FormSection>
@@ -95,7 +88,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</div>
 				</FormSection>
 				<FormSection>
-					<template #label>{{ i18n.ts._aboutMisskey.contributors }}</template>
+					<template #label>{{ i18n.ts._aboutMisskey.projectMembers }}</template>
 					<div :class="$style.contributors">
 						<a href="https://github.com/syuilo" target="_blank" :class="$style.contributor">
 							<img src="https://avatars.githubusercontent.com/u/4439005?v=4" :class="$style.contributorAvatar">
@@ -121,40 +114,19 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</span>
 							</span>
 						</a>
-						<a href="https://github.com/rinsuki" target="_blank" :class="$style.contributor">
-							<img src="https://avatars.githubusercontent.com/u/6533808?v=4" :class="$style.contributorAvatar">
-							<span :class="$style.contributorUsername">@rinsuki
-								<span :class="$style.contributorClient">
-									<span :class="$style.misskey">Misskey</span>
-								</span>
-							</span>
+						<a href="https://github.com/kakkokari-gtyih" target="_blank" :class="$style.contributor">
+							<img src="https://avatars.githubusercontent.com/u/67428053?v=4" :class="$style.contributorAvatar">
+							<span :class="$style.contributorUsername">@kakkokari-gtyih</span>
 						</a>
-						<a href="https://github.com/mei23" target="_blank" :class="$style.contributor">
-							<img src="https://avatars.githubusercontent.com/u/30769358?v=4" :class="$style.contributorAvatar">
-							<span :class="$style.contributorUsername">@mei23
-								<span :class="$style.contributorClient">
-									<span :class="$style.misskey">Misskey</span>
-								</span>
-							</span>
-						</a>
-						<a href="https://github.com/robflop" target="_blank" :class="$style.contributor">
-							<img src="https://avatars.githubusercontent.com/u/8159402?v=4" :class="$style.contributorAvatar">
-							<span :class="$style.contributorUsername">@robflop
-								<span :class="$style.contributorClient">
-									<span :class="$style.misskey">Misskey</span>
-								</span>
-							</span>
-						</a>
-						<a href="https://github.com/noridev" target="_blank" :class="$style.contributor">
-							<img src="https://avatars.githubusercontent.com/u/11006910?v=4" :class="$style.contributorAvatar">
-							<span :class="$style.contributorUsername">@noridev
-								<span :class="$style.contributorClient">
-									<span :class="$style.cherry">Cherry</span><span :class="$style.pick">Pick</span>
-								</span>
-							</span>
+						<a href="https://github.com/taichanNE30" target="_blank" :class="$style.contributor">
+							<img src="https://avatars.githubusercontent.com/u/40626578?v=4" :class="$style.contributorAvatar">
+							<span :class="$style.contributorUsername">@taichanNE30</span>
 						</a>
 					</div>
-					<template #caption><MkLink url="https://github.com/kokonect-link/cherrypick/graphs/contributors">{{ i18n.ts._aboutMisskey.allContributors }}</MkLink></template>
+				</FormSection>
+				<FormSection>
+					<template #label>{{ i18n.ts._aboutMisskey.contributors }}</template>
+					<MkLink url="https://github.com/kokonect-link/cherrypick/graphs/contributors">{{ i18n.ts._aboutMisskey.allContributors }}</MkLink>
 				</FormSection>
 				<FormSection>
 					<template #label><Mfm text="$[jelly ❤]"/> {{ i18n.ts._aboutMisskey.patrons }}</template>
@@ -187,6 +159,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<a style="display: inline-block;" class="masknetwork" title="Mask Network" href="https://mask.io/" target="_blank"><img width="180" src="https://misskey-hub.net/sponsors/masknetwork.png" alt="Mask Network"></a>
 						</div>
 						<div>
+							<a style="display: inline-block;" class="xserver" title="XServer" href="https://www.xserver.ne.jp/" target="_blank"><img width="180" src="https://misskey-hub.net/sponsors/xserver.png" alt="XServer"></a>
+						</div>
+						<div>
 							<a style="display: inline-block;" class="skeb" title="Skeb" href="https://skeb.jp/" target="_blank"><img width="180" src="https://misskey-hub.net/sponsors/skeb.svg" alt="Skeb"></a>
 						</div>
 						<div>
@@ -202,20 +177,22 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { nextTick, onBeforeUnmount, onMounted } from 'vue';
-import { version } from '@/config';
+import { version, basedMisskeyVersion } from '@/config.js';
 import FormLink from '@/components/form/link.vue';
 import FormSection from '@/components/form/section.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkLink from '@/components/MkLink.vue';
-import { physics } from '@/scripts/physics';
-import { i18n } from '@/i18n';
-import { defaultStore } from '@/store';
-import * as os from '@/os';
-import { definePageMetadata } from '@/scripts/page-metadata';
-import { claimAchievement, claimedAchievements } from '@/scripts/achievements';
-import { $i } from '@/account';
+import { physics } from '@/scripts/physics.js';
+import { i18n } from '@/i18n.js';
+import { defaultStore } from '@/store.js';
+import * as os from '@/os.js';
+import { definePageMetadata } from '@/scripts/page-metadata.js';
+import { claimAchievement, claimedAchievements } from '@/scripts/achievements.js';
+import { $i } from '@/account.js';
 
 const patronsWithIconWithCherryPick = [{
+	name: '아르페',
+	icon: 'https://c10.patreonusercontent.com/4/patreon-media/p/user/12167100/e2bc361ba5864c0ab40fc435626f4754/eyJ3IjoyMDB9/1.jpeg?token-time=2145916800&token-hash=fTnx80yG8wG6EdVyv8zDULe8qKnrRlnUV5PEVFS5CfA%3D',
 }];
 
 const patronsWithIconWithMisskey = [{
@@ -281,6 +258,12 @@ const patronsWithIconWithMisskey = [{
 }, {
 	name: 'フランギ・シュウ',
 	icon: 'https://misskey-hub.net/patrons/3016d37e35f3430b90420176c912d304.jpg',
+}, {
+	name: '百日紅',
+	icon: 'https://misskey-hub.net/patrons/302dce2898dd457ba03c3f7dc037900b.jpg',
+}, {
+	name: 'taichan',
+	icon: 'https://misskey-hub.net/patrons/f981ab0159fb4e2c998e05f7263e1cd9.png',
 }];
 
 const patronsWithCherryPick = [
@@ -384,6 +367,9 @@ const patronsWithMisskey = [
 	'Nick / pprmint.',
 	'kino3277',
 	'美少女JKぐーちゃん',
+	'てば',
+	'たっくん',
+	'SHO SEKIGUCHI',
 ];
 
 let isKokonect = false;
@@ -397,6 +383,10 @@ const containerEl = $shallowRef<HTMLElement>();
 
 const whatIsNewCherryPick = () => {
 	window.open(`https://github.com/kokonect-link/cherrypick/blob/develop/CHANGELOG_CHERRYPICK.md#${version.replace(/\./g, '')}`, '_blank');
+};
+
+const whatIsNewMisskey = () => {
+	window.open(`https://github.com/kokonect-link/cherrypick/blob/develop/CHANGELOG.md#${basedMisskeyVersion.replace(/\./g, '')}`, '_blank');
 };
 
 function iconLoaded() {
@@ -432,6 +422,28 @@ function iLoveCherryPick() {
 function getTreasure() {
 	thereIsTreasure = false;
 	claimAchievement('foundTreasure');
+}
+
+function donateCherryPick(ev: MouseEvent) {
+	os.popupMenu([{
+		text: 'Patreon',
+		icon: 'ti ti-pig-money',
+		action: () => {
+			window.open('https://www.patreon.com/noridev', '_blank');
+		},
+	}, {
+		text: 'Paypal',
+		icon: 'ti ti-pig-money',
+		action: () => {
+			window.open('https://www.paypal.me/noridev', '_blank');
+		},
+	}, {
+		text: 'Toss (Korea)',
+		icon: 'ti ti-pig-money',
+		action: () => {
+			window.open('https://toss.me/noridev', '_blank');
+		},
+	}], ev.currentTarget ?? ev.target);
 }
 
 onMounted(() => {
@@ -618,5 +630,54 @@ definePageMetadata({
 
 .patronName {
 	margin-left: 12px;
+}
+
+.main {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  background: var(--buttonBg);
+  border-radius: 6px;
+  font-size: 0.9em;
+
+  &:hover {
+    text-decoration: none;
+    background: var(--buttonHoverBg);
+  }
+
+  &.active {
+    color: var(--accent);
+    background: var(--buttonHoverBg);
+  }
+}
+
+.icon {
+  margin-right: 0.75em;
+  flex-shrink: 0;
+  text-align: center;
+  color: var(--fgTransparentWeak);
+
+  &:empty {
+    display: none;
+
+    & + .text {
+      padding-left: 4px;
+    }
+  }
+}
+
+.text {
+  flex-shrink: 1;
+  white-space: normal;
+  padding-right: 12px;
+  text-align: center;
+}
+
+.suffix {
+  margin-left: auto;
+  opacity: 0.7;
+  white-space: nowrap;
 }
 </style>

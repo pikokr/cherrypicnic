@@ -14,7 +14,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<div>
 		<MkEvent v-if="note.event" :note="note"/>
 		<p v-if="note.cw != null" :class="$style.cw">
-			<Mfm v-if="note.cw != ''" style="margin-right: 8px;" :text="note.cw" :author="note.user" :i="$i" :emojiUrls="note.emojis"/>
+			<Mfm v-if="note.cw != ''" style="margin-right: 8px;" :text="note.cw" :author="note.user" :nyaize="'account'" :i="$i" :emojiUrls="note.emojis"/>
 			<MkCwButton v-model="showContent" :note="note"/>
 		</p>
 		<div v-show="note.cw == null || showContent">
@@ -31,10 +31,10 @@ import MkNoteHeader from '@/components/MkNoteHeader.vue';
 import MkSubNoteContent from '@/components/MkSubNoteContent.vue';
 import MkCwButton from '@/components/MkCwButton.vue';
 import MkEvent from '@/components/MkEvent.vue';
-import { $i } from '@/account';
-import { eventBus } from '@/scripts/cherrypick/eventBus';
-import { mainRouter } from '@/router';
-import { defaultStore } from '@/store';
+import { $i } from '@/account.js';
+import { globalEvents } from '@/events.js';
+import { mainRouter } from '@/router.js';
+import { defaultStore } from '@/store.js';
 
 let showEl = $ref(false);
 
@@ -45,7 +45,7 @@ const props = defineProps<{
 const showContent = $ref(false);
 
 onMounted(() => {
-	eventBus.on('showEl', (showEl_receive) => {
+	globalEvents.on('showEl', (showEl_receive) => {
 		showEl = showEl_receive;
 	});
 });

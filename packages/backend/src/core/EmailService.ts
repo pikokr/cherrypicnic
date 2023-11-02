@@ -10,7 +10,7 @@ import { MetaService } from '@/core/MetaService.js';
 import { DI } from '@/di-symbols.js';
 import type { Config } from '@/config.js';
 import type Logger from '@/logger.js';
-import type { UserProfilesRepository } from '@/models/index.js';
+import type { UserProfilesRepository } from '@/models/_.js';
 import { LoggerService } from '@/core/LoggerService.js';
 import { bindThis } from '@/decorators.js';
 
@@ -78,7 +78,7 @@ export class EmailService {
 
 			a {
 				text-decoration: none;
-				color: #86b300;
+				color: #ffbcdc;
 			}
 			a:hover {
 				text-decoration: underline;
@@ -92,7 +92,7 @@ export class EmailService {
 			}
 				main > header {
 					padding: 32px;
-					background: #86b300;
+					background: #ffbcdc;
 				}
 					main > header > img {
 						max-width: 128px;

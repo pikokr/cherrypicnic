@@ -4,22 +4,23 @@
  */
 
 import { computed, createApp, watch, markRaw, version as vueVersion, defineAsyncComponent } from 'vue';
-import { common } from './common';
-import { version, ui, lang, updateLocale } from '@/config';
-import { i18n, updateI18n } from '@/i18n';
-import { confirm, alert, post, popup, welcomeToast } from '@/os';
-import { useStream } from '@/stream';
-import * as sound from '@/scripts/sound';
-import { $i, refreshAccount, login, updateAccount, signout } from '@/account';
-import { defaultStore, ColdDeviceStorage } from '@/store';
-import { makeHotkey } from '@/scripts/hotkey';
-import { reactionPicker } from '@/scripts/reaction-picker';
-import { miLocalStorage } from '@/local-storage';
-import { claimAchievement, claimedAchievements } from '@/scripts/achievements';
-import { mainRouter } from '@/router';
-import { initializeSw } from '@/scripts/initialize-sw';
-import { deckStore } from '@/ui/deck/deck-store';
-import { userName } from '@/filters/user';
+import { common } from './common.js';
+import { version, ui, lang, updateLocale } from '@/config.js';
+import { i18n, updateI18n } from '@/i18n.js';
+import { confirm, alert, post, popup, welcomeToast } from '@/os.js';
+import { useStream, isReloading } from '@/stream.js';
+import * as sound from '@/scripts/sound.js';
+import { $i, refreshAccount, login, updateAccount, signout } from '@/account.js';
+import { defaultStore, ColdDeviceStorage } from '@/store.js';
+import { makeHotkey } from '@/scripts/hotkey.js';
+import { reactionPicker } from '@/scripts/reaction-picker.js';
+import { miLocalStorage } from '@/local-storage.js';
+import { claimAchievement, claimedAchievements } from '@/scripts/achievements.js';
+import { mainRouter } from '@/router.js';
+import { initializeSw } from '@/scripts/initialize-sw.js';
+import { deckStore } from '@/ui/deck/deck-store.js';
+import { userName } from '@/filters/user.js';
+import { vibrate } from '@/scripts/vibrate.js';
 
 export async function mainBoot() {
 	const { isClientUpdated } = await common(() => createApp(
@@ -41,6 +42,7 @@ export async function mainBoot() {
 
 	let reloadDialogShowing = false;
 	stream.on('_disconnected_', async () => {
+		if (isReloading) return;
 		if (defaultStore.state.serverDisconnectedBehavior === 'reload') {
 			location.reload();
 		} else if (defaultStore.state.serverDisconnectedBehavior === 'dialog') {
@@ -227,11 +229,18 @@ export async function mainBoot() {
 		});
 
 		main.on('readAllNotifications', () => {
-			updateAccount({ hasUnreadNotification: false });
+			updateAccount({
+				hasUnreadNotification: false,
+				unreadNotificationsCount: 0,
+			});
 		});
 
 		main.on('unreadNotification', () => {
-			updateAccount({ hasUnreadNotification: true });
+			const unreadNotificationsCount = ($i?.unreadNotificationsCount ?? 0) + 1;
+			updateAccount({
+				hasUnreadNotification: true,
+				unreadNotificationsCount,
+			});
 		});
 
 		main.on('unreadMention', () => {
@@ -257,6 +266,7 @@ export async function mainBoot() {
 		main.on('unreadMessagingMessage', () => {
 			updateAccount({ hasUnreadMessagingMessage: true });
 			sound.play('chatBg');
+			vibrate(ColdDeviceStorage.get('vibrateChatBg') ? [50, 40] : '');
 		});
 
 		main.on('readAllAntennas', () => {

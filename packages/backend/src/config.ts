@@ -47,6 +47,7 @@ type Source = {
 	redis: RedisOptionsSource;
 	redisForPubsub?: RedisOptionsSource;
 	redisForJobQueue?: RedisOptionsSource;
+	redisForTimelines?: RedisOptionsSource;
 	meilisearch?: {
 		host: string;
 		port: string;
@@ -86,6 +87,8 @@ type Source = {
 		logName?: string;
 	}
 
+	apFileBaseUrl?: string;
+
 	mediaProxy?: string;
 	proxyRemoteFiles?: boolean;
 	videoThumbnailGenerator?: string;
@@ -95,6 +98,7 @@ type Source = {
 	perChannelMaxNoteCacheCount?: number;
 	perUserNotificationsMaxCount?: number;
 	deactivateAntennaThreshold?: number;
+	pidFile: string;
 };
 
 export type Config = {
@@ -145,10 +149,19 @@ export type Config = {
 	relashionshipJobPerSec: number | undefined;
 	deliverJobMaxAttempts: number | undefined;
 	inboxJobMaxAttempts: number | undefined;
+
+	cloudLogging?: {
+		projectId: string;
+		saKeyPath: string;
+		logName?: string;
+	}
+
+	apFileBaseUrl: string | undefined;
 	proxyRemoteFiles: boolean | undefined;
 	signToActivityPubGet: boolean | undefined;
 
 	version: string;
+	basedMisskeyVersion: string;
 	host: string;
 	hostname: string;
 	scheme: string;
@@ -166,9 +179,11 @@ export type Config = {
 	redis: RedisOptions & RedisOptionsSource;
 	redisForPubsub: RedisOptions & RedisOptionsSource;
 	redisForJobQueue: RedisOptions & RedisOptionsSource;
+	redisForTimelines: RedisOptions & RedisOptionsSource;
 	perChannelMaxNoteCacheCount: number;
 	perUserNotificationsMaxCount: number;
 	deactivateAntennaThreshold: number;
+	pidFile: string;
 };
 
 const _filename = fileURLToPath(import.meta.url);
@@ -198,6 +213,7 @@ export function loadConfig(): Config {
 
 	const url = tryCreateUrl(config.url);
 	const version = meta.version;
+	const basedMisskeyVersion = meta.basedMisskeyVersion;
 	const host = url.host;
 	const hostname = url.hostname;
 	const scheme = url.protocol.replace(/:$/, '');
@@ -211,6 +227,7 @@ export function loadConfig(): Config {
 
 	return {
 		version,
+		basedMisskeyVersion,
 		url: url.origin,
 		port: config.port ?? parseInt(process.env.PORT ?? '', 10),
 		socket: config.socket,
@@ -231,6 +248,7 @@ export function loadConfig(): Config {
 		redis,
 		redisForPubsub: config.redisForPubsub ? convertRedisOptions(config.redisForPubsub, host) : redis,
 		redisForJobQueue: config.redisForJobQueue ? convertRedisOptions(config.redisForJobQueue, host) : redis,
+		redisForTimelines: config.redisForTimelines ? convertRedisOptions(config.redisForTimelines, host) : redis,
 		id: config.id,
 		proxy: config.proxy,
 		proxySmtp: config.proxySmtp,
@@ -250,6 +268,7 @@ export function loadConfig(): Config {
 		inboxJobMaxAttempts: config.inboxJobMaxAttempts,
 		proxyRemoteFiles: config.proxyRemoteFiles,
 		signToActivityPubGet: config.signToActivityPubGet,
+		apFileBaseUrl: config.apFileBaseUrl,
 		mediaProxy: externalMediaProxy ?? internalMediaProxy,
 		externalMediaProxyEnabled: externalMediaProxy !== null && externalMediaProxy !== internalMediaProxy,
 		videoThumbnailGenerator: config.videoThumbnailGenerator ?
@@ -259,8 +278,9 @@ export function loadConfig(): Config {
 		clientEntry: clientManifest['src/_boot_.ts'],
 		clientManifestExists: clientManifestExists,
 		perChannelMaxNoteCacheCount: config.perChannelMaxNoteCacheCount ?? 1000,
-		perUserNotificationsMaxCount: config.perUserNotificationsMaxCount ?? 300,
+		perUserNotificationsMaxCount: config.perUserNotificationsMaxCount ?? 500,
 		deactivateAntennaThreshold: config.deactivateAntennaThreshold ?? (1000 * 60 * 60 * 24 * 7),
+		pidFile: config.pidFile,
 	};
 }
 

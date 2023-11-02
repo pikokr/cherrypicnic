@@ -6,7 +6,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <div class="_gaps">
 	<div class="_gaps">
-		<MkInput v-model="searchQuery" :large="true" :autofocus="true" type="search" @keydown="onInputKeydown">
+		<MkInput v-model="searchQuery" :large="true" autofocus type="search" @keydown="onInputKeydown">
 			<template #prefix><i class="ti ti-search"></i></template>
 		</MkInput>
 		<MkRadios v-model="searchOrigin" @update:modelValue="search()">
@@ -30,17 +30,17 @@ import MkUserList from '@/components/MkUserList.vue';
 import MkInput from '@/components/MkInput.vue';
 import MkRadios from '@/components/MkRadios.vue';
 import MkButton from '@/components/MkButton.vue';
-import { i18n } from '@/i18n';
-import * as os from '@/os';
+import { i18n } from '@/i18n.js';
+import * as os from '@/os.js';
 import MkFoldableSection from '@/components/MkFoldableSection.vue';
-import { $i } from '@/account';
-import { instance } from '@/instance';
+import { $i } from '@/account.js';
+import { instance } from '@/instance.js';
 import MkInfo from '@/components/MkInfo.vue';
-import { useRouter } from '@/router';
+import { useRouter } from '@/router.js';
 
 const router = useRouter();
 
-let key = $ref('');
+let key = $ref(0);
 let searchQuery = $ref('');
 let searchOrigin = $ref('combined');
 let userPagination = $ref();
@@ -77,7 +77,7 @@ async function search() {
 		},
 	};
 
-	key = query;
+	key++;
 }
 
 function onInputKeydown(evt: KeyboardEvent) {

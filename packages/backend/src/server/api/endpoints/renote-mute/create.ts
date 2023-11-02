@@ -7,8 +7,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import ms from 'ms';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { IdService } from '@/core/IdService.js';
-import type { RenoteMutingsRepository } from '@/models/index.js';
-import type { MiRenoteMuting } from '@/models/entities/RenoteMuting.js';
+import type { RenoteMutingsRepository } from '@/models/_.js';
+import type { MiRenoteMuting } from '@/models/RenoteMuting.js';
 import { DI } from '@/di-symbols.js';
 import { GetterService } from '@/server/api/GetterService.js';
 import { ApiError } from '../../error.js';
@@ -90,8 +90,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			// Create mute
 			await this.renoteMutingsRepository.insert({
-				id: this.idService.genId(),
-				createdAt: new Date(),
+				id: this.idService.gen(),
 				muterId: muter.id,
 				muteeId: mutee.id,
 			} as MiRenoteMuting);

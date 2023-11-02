@@ -1,9 +1,11 @@
 <!--
-## 2023.x.x-cp-4.x.x
+## 4.x.x
 출시일: unreleased<br>
-전체 변경 사항을 확인하려면, [CHANGELOG.md#2023xx](CHANGELOG.md#2023xx) 문서를 참고하십시오.
+기반 Misskey 버전: 2023.x.x<br>
+Misskey의 전체 변경 사항을 확인하려면, [CHANGELOG.md#2023xx](CHANGELOG.md#2023xx) 문서를 참고하십시오.
 
 ## NOTE
+- 
 
 ### General
 - 
@@ -21,34 +23,245 @@
 # 릴리즈 노트
 이 문서는 CherryPick의 변경 사항만 포함합니다.
 
-## 2023.x.x-cp-4.x.x
+## 4.5.0
 출시일: unreleased<br>
-전체 변경 사항을 확인하려면, [CHANGELOG.md#2023xx](CHANGELOG.md#2023xx) 문서를 참고하십시오.
+기반 Misskey 버전: 2023.11.0<br>
+Misskey의 전체 변경 사항을 확인하려면, [CHANGELOG.md#2023xx](CHANGELOG.md#2023xx) 문서를 참고하십시오.
 
-### General
-- 스크롤 시 요소 표시(헤더, 플로팅 버튼, 탐색 모음)를 사용자화 할 수 있는 옵션 추가
-- 노트 작성 폼의 '노트' 버튼을 '냥!'으로 변경할 수 있는 옵션 추가
-- 노트의 리액션을 삭제하지 않고도 리액션 버튼을 눌러 리액션을 변경할 수 있도록 (misskey-dev/misskey#11157)
-- 리노트를 신고할 수 있도록 (misskey-dev/misskey#11466)
-- Rosé Pine 테마 추가 ([rose-pine/misskey](https://github.com/rose-pine/misskey))
-- 타임라인 소개 추가
-- 이용 약관을 서버 메뉴에서 볼 수 있도록
-- 계정 초기 설정과 타임라인 튜토리얼을 다시 진행할 수 있도록
-- 리모트 사용자의 노트/팔로잉/팔로워 수를 리모트 서버의 정보와 동일하게 보이도록
-- 유저 메뉴에서 '리모트 유저 정보 갱신'을 진행할 수 있도록
-- 설정에서 변경 가능한 옵션은 다이얼로그에서 안내하도록 주석 추가
-- 메모리 할당자를 jemalloc으로 설정 (MisskeyIO/misskey#152)
-- 신고 즉시 해결 기능 (misskey-dev/misskey#11032)
+> 버전 관리 방식이 변경되었기 때문에, 기존 버전보다 낮은 것으로 인식되어 업데이트 대화 상자가 표시되지 않을 수 있습니다.
+> 또한, 일부 locale이 누락되거나 기능이 정상적으로 작동하지 않는 등의 문제가 발생할 수 있습니다.
+> 문제가 발생하면 '설정 - 캐시 비우기'를 진행하거나, 브라우저 캐시를 삭제하십시오.
 
 ### Client
-- about-misskey 페이지에서 클라이언트 버전을 누르면 변경 사항을 볼 수 있음
-- 새로운 신고가 있는 경우, 네비게이션 바의 제어판 아이콘과 제어판 페이지의 신고 섹션에 점을 표시
-- 스크롤 시 요소 표시 기능을 Friendly 이외의 UI에도 대응
-- 기본 다크 테마를 'Rosé Pine Moon'으로 변경
-- 이미지 압축 방식 선택 가능
+- Feat: 본문 미리보기의 프로필을 표시하지 않도록 설정할 수 있음
+- Feat: 이모티콘 피커의 카테고리를 다중 계층 폴더로 분류할 수 있음 (misskey-dev/misskey#12132)
+- Enhance: 스와이프하여 타임라인을 다시 불러올 수 있음 (misskey-dev/misskey#12113)
+	- PC의 경우 오른쪽 상단의 버튼을 통해서도 다시 불러올 수 있습니다
+- Enhance: 타임라인 자동 업데이트를 비활성화할 수 있음 (misskey-dev/misskey#12113)
+- Enhance: AiScript 함수 `Mk:nyaize()`가 추가됨 (misskey-dev/misskey#12136)
+- Enhance: 노트 작성 폼에서 노트를 게시한 뒤에 textarea의 높이를 원래대로 되돌림
+- Enhance: 노트 상세 페이지의 답글 목록 개선
+- Enhance: 유저 페이지 개선
+  - 요약 탭의 하이라이트를 제거 & 노트 탭으로 하이라이트를 이동
+  - 요약 탭의 리액션을 제거 & 노트 탭으로 리액션을 이동
+- chore: 이모티콘 이름 필드에서 autocapitalize를 끄기 (misskey-dev/misskey#12139)
+- Fix: 외부 리소스 설치 페이지에서 페이지 캐시가 작동하는 문제 수정 (misskey-dev/misskey#12105)
+- Fix: 채널 생성/업데이트 시 실패하면 아무 것도 표시되지 않는 문제 수정 misskey-dev/misskey#11983 (misskey-dev/misskey#12142)
+- Fix: 유저 페이지의 미디어 타임라인에서 미디어가 없는 답글이 표시됨 #388
+- Fix: Friendly UI가 아닌 경우 헤더 디자인이 잘못 표시되는 문제
+  - 헤더의 액션 항목이 여러 개 일 때 왼쪽으로 타이틀이 치우칠 수 있음
+  - 특정 조건에서 헤더의 왼쪽에 여백이 발생할 수 있음
+  - 일부 페이지에서 잘못된 디자인이 표시됨
+  - 일부 페이지에서 액션 항목이 존재해도 버튼이 표시되지 않을 수 있음
+- Fix: 네비게이션 메뉴의 하단 프로필 영역이 잘못된 디자인으로 표시됨
+
+### Server
+- Feat: 연합에서 노트 수정이 반영됨 (libnare/cp-castella#1)
+- Enhance: 사용자 차단 개선 (Renote Part) (misskey-dev/misskey#12089)
+- Fix: 장시간 기다려도 마이그레이션이 완료되지 않을 수 있음
+- Fix: Redis 에서 TL 캐시를 반환하지 않으면 '고양이만 보기'가 작동하지 않을 수 있음
+
+---
+
+## 4.4.1
+출시일: 2023/10/21<br>
+기반 Misskey 버전: 2023.10.2<br>
+Misskey의 전체 변경 사항을 확인하려면, [CHANGELOG.md#2023102](CHANGELOG.md#2023102) 문서를 참고하십시오.
+
+> 버전 관리 방식이 변경되었기 때문에, 기존 버전보다 낮은 것으로 인식되어 업데이트 대화 상자가 표시되지 않을 수 있습니다.
+> 또한, 일부 locale이 누락되거나 기능이 정상적으로 작동하지 않는 등의 문제가 발생할 수 있습니다.
+> 문제가 발생하면 '설정 - 캐시 비우기'를 진행하거나, 브라우저 캐시를 삭제하십시오.
+
+### Client
+- Feat: 노트 편집 시 토스트 알림을 표시하고 사운드를 재생
+- Feat: PostForm 접두사에 현재 공개 범위 표시 ([tanukey-dev/tanukey@1cc0071](https://github.com/tanukey-dev/tanukey/commit/1cc0071bbd424949d9305bcec554f5d755a73554))
+- Feat: 플러그인 및 테마를 외부 사이트에서 직접 설치할 수 있음 (misskey-dev/misskey#12034)
+  - 외부 사이트에서 구현해야 합니다. 자세한 내용은 Misskey Hub를 참조하세요.
+    https://misskey-hub.net/docs/advanced/publish-on-your-website.html
+- Enhance: 노트를 편집할 때 편집 중인 노트임을 강조함
+- Enhance: 타임라인에서 새 노트가 20개 이상이면 '20+'로 표기
+- Enhance: 노트를 편집한 시간이 개별적으로 표시됨
+- Fix: '새 노트 알림'을 '노트 수 표시'로 설정했을 때 한국어 이외의 언어에서 내용이 표시되지 않음
+- Fix: 알림에 여는 인용문 사용 (misskey-dev/misskey#12082)
+
+### Server
+- Enhance: '내용 숨기기'로 설정된 노트의 주석도 노트 편집 기록에 표시됨
+- Revert: Perf: 부팅 시 MeiliSearch 설정을 업데이트하지 마십시오 (MisskeyIO/misskey#158)
+- Fix: 이모지를 여러 개 추가할 때도 이름의 중복을 확인하도록
+- Fix: 유저 페이지 및 이벤트 검색에서 '미래순'으로 정렬할 수 없음
+
+---
+
+## 4.4.0
+출시일: 2023/10/17<br>
+기반 Misskey 버전: 2023.10.1<br>
+Misskey의 전체 변경 사항을 확인하려면, [CHANGELOG.md#2023101](CHANGELOG.md#2023101) 문서를 참고하십시오.
+
+> 버전 관리 방식이 변경되었기 때문에, 기존 버전보다 낮은 것으로 인식되어 업데이트 대화 상자가 표시되지 않을 수 있습니다.
+> 또한, 일부 locale이 누락되거나 기능이 정상적으로 작동하지 않는 등의 문제가 발생할 수 있습니다.
+> 문제가 발생하면 '설정 - 캐시 비우기'를 진행하거나, 브라우저 캐시를 삭제하십시오.
+
+## NOTE
+- Misskey 2023.10.0 에서 제거된 노트 편집 기능이 계속 유지됩니다.
+
+### General
+- Add: Mirerado 테마 추가 ([mirerado-theme](https://mi.rerac.dev/@notify/pages/mirerado-theme))
+- Feat: 읽지 않은 알림 수를 표시할 수 있음 (misskey-dev/misskey#11982)
+- Feat: 햅틱 피드백 개선
+  - 지원 범위 추가
+  - 설정을 세부적으로 변경할 수 있음
+- Fix: 서버 측에서 테스트 알림을 올바르게 수행할 수 있도록 수정 (misskey-dev/misskey#11982)
+
+### Client
+- Feat: 클라이언트 업데이트 알림 개선
+  - 알림 채널을 선택할 수 있음
+  - 다음 릴리즈 출시까지 알리지 않도록 설정할 수 있음
+- Feat: 활동에서 팔로잉, 팔로워 차트를 볼 수 있음
+- Feat: 모달 디자인을 변경할 수 있음
+  - 흐림 효과를 활성화하면 디자인이 변경됨
+  - 흐림 효과가 활성화 된 상태에서 '모달 배경색 제거' 옵션을 활성화하면 일부 모달의 디자인이 변경됨
+- Enhance: 그룹 대화에서 읽음 표시를 개선
+- Enhance: cli, bios 페이지 개선
+- Enhance: 서버와 연결이 끊겼을 때 stream indicator가 즉시 표시되지 않도록 (MisskeyIO/misskey#172)
+- Enhance: 스피너 디자인 변경
+- Enhance: 후원 버튼의 디자인 개선
+  - 버튼을 하나로 병합함
+  - 버튼을 누르면 팝업 메뉴로 표시됨
+- Fix: (Friendly) 길게 누르면 표시되는 계정 관리 다이얼로그의 UI 관련 오류 수정
+- Fix: 서브 노트 기능 오류
+  - 서브 노트에서 더 보기 버튼을 사용할 수 없음
+  - 리액션 변경 기능을 사용할 수 없음
+- Fix: 노트 상세 페이지의 노트 입력 폼을 누르기 전에 일부 요소가 표시될 수 있음
+- Fix: 히트맵이 표시되지 않음
+- Fix: 대화 페이지에서 일부 요소가 중복으로 표시될 수 있음
+- Fix: 브랜딩에서 적용한 이미지가 대화 페이지에서 반영되지 않음
+- Fix: 유저 검색에서 로컬/리모트 설정이 제대로 작동하지 않음
+- Fix: 유저 선택 다이얼로그에서 검색 결과가 표시되지 않음
+- Fix: 게시 양식에서 사용자 변경 사항이 미리보기에 반영되지 않는 문제 (misskey-dev/misskey#12022)
+- Fix: 타임라인 메뉴 요소 수정
+
+### Server
+- Feat: Note pack에서 SQL 디바운스 (MisskeyIO/misskey#176)
+- Enhance: 초기 로드 속도 개선
+- Revert: Feat: 이모티콘 중복 체크 (misskey-dev/misskey#11941)
+- Fix: Publish notes announced by relay (misskey-dev/misskey#11056)
+- Fix: Meilisearch가 설정된 상태에서 노트 검색 시 로컬/리모트 설정이 제대로 작동하지 않음
+- Fix: Redis의 TTL이 만료되지 않았다면 메모리에 값을 다시 쓰기 (MisskeyIO/misskey#174)
+- Fix: NoteEntityService의 pack 내에서 CustomEmojiService의 prefetchEmoji를 호출함 (MisskeyIO/misskey#179)
+
+---
+
+## 4.3.3 (Hotfix)
+출시일: 2023/10/3<br>
+기반 Misskey 버전: 2023.9.3<br>
+Misskey의 전체 변경 사항을 확인하려면, [CHANGELOG.md#202393](CHANGELOG.md#202393) 문서를 참고하십시오.
+
+> 버전 관리 방식이 변경되었기 때문에, 기존 버전보다 낮은 것으로 인식되어 업데이트 대화 상자가 표시되지 않을 수 있습니다.
+> 또한, 일부 locale이 누락되거나 기능이 정상적으로 작동하지 않는 등의 문제가 발생할 수 있습니다.
+> 문제가 발생하면 '설정 - 캐시 비우기'를 진행하거나, 브라우저 캐시를 삭제하십시오.
+
+### Server
+- Fix: 마이그레이션 문제
+	- Misskey에서 CherryPick으로 마이그레이션하면 오류가 발생함
+
+---
+
+## 4.3.2
+출시일: 2023/10/3<br>
+기반 Misskey 버전: 2023.9.3<br>
+Misskey의 전체 변경 사항을 확인하려면, [CHANGELOG.md#202393](CHANGELOG.md#202393) 문서를 참고하십시오.
+
+> 버전 관리 방식이 변경되었기 때문에, 기존 버전보다 낮은 것으로 인식되어 업데이트 대화 상자가 표시되지 않을 수 있습니다.
+> 또한, 일부 locale이 누락되거나 기능이 정상적으로 작동하지 않는 등의 문제가 발생할 수 있습니다.
+> 문제가 발생하면 '설정 - 캐시 비우기'를 진행하거나, 브라우저 캐시를 삭제하십시오.
+
+### General
+- Feat: 편집한 노트의 기록을 확인할 수 있음 (misskey-dev/misskey#11938)
+
+### Client
+- Feat: 움직이는 이미지를 표시하는 방법을 세분화
+  - 마우스를 움직이거나 화면을 터치하고 있으면 이미지를 재생
+  - 일정 시간이 경과하면 이미지 재생을 중지
+- Feat: 미디어가 포함된 모든 노트를 접을 수 있음
+- Feat: 클라이언트 업데이트가 있으면 알림
+- Enhance: 유저명, 이름, 인스턴스 이름이 길면 스크롤해서 볼 수 있음
+- Fix: 로그인하지 않은 상태에서 노트 상세 페이지의 노트 작성 폼을 조작할 수 있음
+- Fix: Chromium 기반 브라우저에서 노트 작성 폼의 스크롤 영역이 잘못된 디자인을 표시함
+- Fix: 반응한 사용자 목록의 UI가 드물게 왼쪽 상단에 남아있는 문제 수정 (misskey-dev/misskey#11949)
+- Fix: deck ui에서 user list를 볼 때 답글이 표시되지 않음 (misskey-dev/misskey#11951)
+- Fix: 노트 상세 페이지의 노트 작성 폼 입력란에 멘션이 기본으로 입력되어 있음
+  - 작성란을 눌러야 멘션이 입력되도록 변경
+
+### Server
+- Feat: 이모티콘 중복 체크 (misskey-dev/misskey#11941)
+- Enhance: '내용 숨기기'로 설정된 노트의 주석도 번역에 포함됨
+
+---
+
+## 4.3.1
+출시일: 2023/9/29<br>
+기반 Misskey 버전: 2023.9.2<br>
+Misskey의 전체 변경 사항을 확인하려면, [CHANGELOG.md#202392](CHANGELOG.md#202392) 문서를 참고하십시오.
+
+> 버전 관리 방식이 변경되었기 때문에, 기존 버전보다 낮은 것으로 인식되어 업데이트 대화 상자가 표시되지 않을 수 있습니다.
+> 또한, 일부 locale이 누락되거나 기능이 정상적으로 작동하지 않는 등의 문제가 발생할 수 있습니다.
+> 문제가 발생하면 '설정 - 캐시 비우기'를 진행하거나, 브라우저 캐시를 삭제하십시오.
+
+### General
+- 미디어, 고양이 타임라인 개선
+  - [misskey-dev/misskey@eb740e2](https://github.com/misskey-dev/misskey/commit/eb740e2c72ae6854b244ad099c927c069008720e) 이 추가됨에 따라, 해당 기능에 병합하고 기존 미디어 및 고양이 타임라인을 제거함
+
+---
+
+## 4.3.0
+출시일: 2023/9/29<br>
+기반 Misskey 버전: 2023.9.1<br>
+Misskey의 전체 변경 사항을 확인하려면, [CHANGELOG.md#202391](CHANGELOG.md#202391) 문서를 참고하십시오.
+
+> 버전 관리 방식이 변경되었기 때문에, 기존 버전보다 낮은 것으로 인식되어 업데이트 대화 상자가 표시되지 않을 수 있습니다.
+> 또한, 일부 locale이 누락되거나 기능이 정상적으로 작동하지 않는 등의 문제가 발생할 수 있습니다.
+> 문제가 발생하면 '설정 - 캐시 비우기'를 진행하거나, 브라우저 캐시를 삭제하십시오.
+
+### General
+- Add: Rosé Pine 테마 추가 ([rose-pine/misskey](https://github.com/rose-pine/misskey))
+- Add: 타임라인 소개 추가
+- Change: EventBus를 사용하는 코드를 EventEmitter3로 변경
+- Change: 버전 관리 방식 변경
+- Change: '광고를 항상 표시' 옵션을 기본 활성화로 변경
+- Feat: 스크롤 시 요소 표시(헤더, 플로팅 버튼, 탐색 모음)를 사용자화 할 수 있는 옵션 추가
+- Feat: 노트 작성 버튼을 '노트'에서 '냥!'으로 변경할 수 있는 옵션 추가
+- Feat: 리노트를 신고할 수 있도록 (misskey-dev/misskey#11466)
+- Feat: 계정 초기 설정과 타임라인 튜토리얼을 다시 진행할 수 있도록
+- Feat: 리모트 사용자의 노트/팔로잉/팔로워 수를 리모트 서버의 정보와 동일하게 보이도록
+- Feat: 유저 메뉴에서 '리모트 유저 정보 갱신'을 진행할 수 있도록
+- Feat: 신고 즉시 해결 기능 (misskey-dev/misskey#11032)
+- Feat: 어떤 이유로 클라이언트의 이모티콘 캐시가 삭제된 경우 즉시 다시 가져오도록 (MisskeyIO/misskey#163)
+- Feat: 노트 작성 폼에 MFM 도움말을 볼 수 있는 버튼 추가
+- Feat: 새 MFM 구문 추가 (페이드)
+- Feat: 햅틱 피드백 지원
+- Feat: 빌드 기반 Misskey 버전을 확인할 수 있음
+- Enhance: 노트의 리액션을 삭제하지 않고도 리액션 버튼을 눌러 리액션을 변경할 수 있도록 (misskey-dev/misskey#11157)
+- Enhance: 이용 약관을 서버 메뉴에서 볼 수 있도록
+- Enhance: 설정에서 변경 가능한 옵션은 다이얼로그에서 안내하도록 설명 추가
+- Enhance: 메모리 할당자를 jemalloc으로 설정 (MisskeyIO/misskey#152)
+
+### Client
+- Feat: (Friendly) 길게 눌러 계정 메뉴를 표시하는 옵션을 비활성화 할 수 있음
+- Feat: (Friendly) 알림 영역과 위젯 영역의 표시 설정을 '설정 - CherryPick'에서 변경할 수 있음
+- Feat: about-misskey 페이지에서 클라이언트 버전을 누르면 변경 사항을 볼 수 있음
+- Feat: 이미지 압축 방식을 선택할 수 있음
   - 사이즈 변경 여부를 선택할 수 있음
   - 이미지를 업로드할 때 손실 압축으로 변경할 수 있음
+- Feat: Scratchpad에서 Async: 계열 함수나 버튼 콜백 등의 오류에도 대화창을 띄우도록(시험적이라 Play 등에는 미구현) (misskey-dev/misskey#11850)
+- Feat: 민감한 미디어를 돋보이게 하는 설정 추가 (misskey-dev/misskey#11851)
+- Feat: 알림에서 답글이 달린 노트의 상위 노트를 표시하지 않도록 하는 설정 추가
+- Feat: 리노트와 인용 버튼을 표시하는 방법을 선택할 수 있음
+- Feat: 알림 위젯에 필터, 모두 읽은 상태로 표시 버튼 추가
+- Feat: 답글에 글 작성란을 표시하는 기능 추가
+- Feat: 모바일 환경에서 유저 페이지의 헤더 디자인을 변경할 수 있음
 - Spec: 사용자 정의 이모티콘 라이센스를 여러 항목으로 추가할 수 있도록 (MisskeyIO/misskey#130)
+- Enhance: 새로운 신고가 있는 경우, 네비게이션 바의 제어판 아이콘과 제어판 페이지의 신고 섹션에 점을 표시
+- Enhance: 스크롤 시 요소 표시 기능을 Friendly 이외의 UI에도 대응
 - Enhance: '제어판 - 신고' 페이지의 버튼 가독성 향상
 - Enhance: '모달에 흐림 효과 사용' 옵션이 비활성화된 경우, 이미지를 탭하여 표시할 때 표시되는 배경을 어둡게 조정
 - Enhance: 대화 페이지 디자인 개선
@@ -60,9 +273,16 @@
 - Enhance: 네비게이션 메뉴 디자인 개선
 - Enhance: '서버의 머신 사양을 공개하기' 설정이 비활성화 상태인 경우, 제어판에서 서버 통계를 출력할 수 없다는 안내 문구를 표시하도록
 - Enhance: 로그인할 때 프로필 아이콘의 모양을 '프로필 아이콘을 사각형으로 표시' 설정을 따르도록
+- Enhance: 일부 설정 배치 변경
+- Enhance: '타임라인 상단에 글 작성란 표시' 옵션이 활성화 되었을 때 autofocus를 사용하지 않도록
+- Enhance: 로컬 유저만 그룹에 초대할 수 있도록
+- Enhance: 노트를 게시한 방식에 따라 토스트 알림의 아이콘과 내용이 다르게 표시되도록
+- Enhance: 'Enter 키를 눌러 보내기' 옵션에 관계없이 채팅에서 Enter 키를 눌러 전송하도록 강제함
+- Enhance: 상대방이 채팅을 읽기 전이면 '보냄'으로 표시하도록
 - Fix: (Friendly) 흐림 효과를 사용할 때 하단 내비게이션 바의 가독성이 매우 떨어지는 문제
 - Fix: (Friendly) 위젯 버튼에서 'UI 애니메이션 줄이기' 옵션이 적용되지 않는 문제
 - Fix: (Friendly) 스크롤을 해도 위젯 버튼이 숨겨지지 않는 문제
+- Fix: (Friendly) 특정 조건에서 페이지를 새로 고치면 이전 페이지가 표시되는 문제
 - Fix: 움직임이 있는 MFM 설정을 사용하지 않아도 `$[rainbow ]`문자를 볼 수 있음 (misskey-dev/misskey#11361)
 - Fix: 모바일에서 헤더의 디자인을 변경하면 흐림 효과가 강제됨
 - Fix: 환경설정 백업 시 일부 설정이 누락되어 백업되는 문제
@@ -70,19 +290,26 @@
 - Fix: Misskey 플러그인 설치 시 AiScript 버전 확인이 0.14.0 이후 버전에서 지원되지 않는 문제 수정 (misskey-dev/misskey#11729)
 - Fix: '대화'에서 Autocomplete를 사용할 수 없음
 - Fix: 누락된 안테나 소스 추가
+- Fix: OffscreenCanvas undefined (MisskeyIO/misskey#165)
+- Fix: 대화 삭제가 올바르게 작동하지 않음
+- Fix: 유저 메뉴에서 '대화 시작하기'를 클릭하면 잘못된 페이지가 호출됨화
+- Fix: 대화 페이지의 스크롤이 의도하지 않은 방향으로 작동할 수 있음
 
 ### Server
 - Nodeinfo의 Software 이름을 CherryPick이 아닌 다른 이름으로 변경할 때 관련 주석 추가
 - Graceful Shutdown (MisskeyIO/misskey#156)
-- Perf : 부팅 시 MeiliSearch 설정을 업데이트하지 마십시오 (MisskeyIO/misskey#158)
-- Enhance : 종료 시 DB 연결이 끊어지면 확실하게 종료 (MisskeyIO/misskey#159)
+- Perf: 부팅 시 MeiliSearch 설정을 업데이트하지 마십시오 (MisskeyIO/misskey#158)
+- Enhance: 종료 시 DB 연결이 끊어지면 확실하게 종료 (MisskeyIO/misskey#159)
 - Fix: 실행 중인 앱 내에서 ServerStatsService 시작 (misskey-dev/misskey#11342)
+- Fix: deliver-delayed에서 URL 구문 분석에 실패할 때 모든 것이 꼬이는 문제 수정 (MisskeyIO/misskey#164)
+- Fix: 대기열에 예상치 못한 데이터가 있는 경우, 엔드포인트 URL 구문 분석 및 오류 로그 생성에 실패하는 문제 수정 (MisskeyIO/misskey#168)
+- Fix: 리모트 서버로 대화를 발신할 수 없는 문제
 
 ---
 
 ## 13.14.2-cp-4.2.0
-출시일: 2023/07/29<br>
-전체 변경 사항을 확인하려면, [CHANGELOG.md#13142](CHANGELOG.md#13142) 문서를 참고하십시오.
+출시일: 2023/7/29<br>
+Misskey의 전체 변경 사항을 확인하려면, [CHANGELOG.md#13142](CHANGELOG.md#13142) 문서를 참고하십시오.
 
 ### General
 - 리액션 수신의 기본값을 전체로 설정
@@ -136,8 +363,8 @@
 ---
 
 ## 13.13.2-cp-4.1.0
-출시일: 2023/06/20<br>
-전체 변경 사항을 확인하려면, [CHANGELOG.md#13132](CHANGELOG.md#13132) 문서를 참고하십시오.
+출시일: 2023/6/20<br>
+Misskey의 전체 변경 사항을 확인하려면, [CHANGELOG.md#13132](CHANGELOG.md#13132) 문서를 참고하십시오.
 
 ### General
 - 타임라인에 노트의 답글을 표시하는 옵션의 기본값을 켜짐으로 설정
@@ -219,8 +446,8 @@
 ---
 
 ## 13.13.1-cp-4.0.0
-출시일: 2023/06/06<br>
-전체 변경 사항을 확인하려면, [CHANGELOG.md#13131](CHANGELOG.md#13131) 문서를 참고하십시오.
+출시일: 2023/6/6<br>
+Misskey의 전체 변경 사항을 확인하려면, [CHANGELOG.md#13131](CHANGELOG.md#13131) 문서를 참고하십시오.
 
 ### General
 - 채팅 및 그룹 기능 유지 (revert: misskey-dev/misskey#9919, misskey-dev/misskey#9942)
@@ -280,8 +507,8 @@
 ---
 
 ## 13.5.6-cp-3.1.0
-출시일: 2023/02/10<br>
-전체 변경 사항을 확인하려면, [CHANGELOG.md](CHANGELOG.md) 문서를 참고하십시오.
+출시일: 2023/2/10<br>
+Misskey의 전체 변경 사항을 확인하려면, [CHANGELOG.md](CHANGELOG.md) 문서를 참고하십시오.
 
 ## NOTE
 변경 사항이 없습니다.
@@ -289,8 +516,8 @@
 ---
 
 ## 13.5.5-cp-3.1.0
-출시일: 2023/02/10<br>
-전체 변경 사항을 확인하려면, [CHANGELOG.md](CHANGELOG.md) 문서를 참고하십시오.
+출시일: 2023/2/10<br>
+Misskey의 전체 변경 사항을 확인하려면, [CHANGELOG.md](CHANGELOG.md) 문서를 참고하십시오.
 
 ## NOTE
 이 버전부터 Misskey v13을 대응합니다.
@@ -319,8 +546,8 @@
 ---
 
 ## 12.119.0-cp-3.0.0
-출시일: 2022/09/16<br>
-전체 변경 사항을 확인하려면, [CHANGELOG.md](CHANGELOG.md) 문서를 참고하십시오.
+출시일: 2022/9/16<br>
+Misskey의 전체 변경 사항을 확인하려면, [CHANGELOG.md](CHANGELOG.md) 문서를 참고하십시오.
 
 ## NOTE
 이 버전부터는 기존 버전과 연결되지 않고, 새로 포크하여 작업되었습니다. 따라서 기존 버전에 있던 기능들이 다시 명시될 수 있습니다.

@@ -4,15 +4,15 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
-import type { UserGroupJoiningsRepository, UsersRepository, MessagingMessagesRepository } from '@/models/index.js';
-import type { MiUser, MiLocalUser, MiRemoteUser } from '@/models/entities/User.js';
-import type { MiUserGroup } from '@/models/entities/UserGroup.js';
+import type { UserGroupJoiningsRepository, UsersRepository, MessagingMessagesRepository } from '@/models/_.js';
+import type { MiUser, MiLocalUser, MiRemoteUser } from '@/models/User.js';
+import type { MiUserGroup } from '@/models/UserGroup.js';
 import { MessagingService } from '@/core/MessagingService.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
 import { DI } from '@/di-symbols.js';
 import { bindThis } from '@/decorators.js';
+import type { GlobalEvents } from '@/core/GlobalEventService.js';
 import Channel from '../channel.js';
-import type { StreamMessages } from '../types.js';
 
 class MessagingChannel extends Channel {
 	public readonly chName = 'messaging';
@@ -63,7 +63,7 @@ class MessagingChannel extends Channel {
 		this.emitTypersIntervalId = setInterval(this.emitTypers, 5000);
 
 		this.subCh = this.otherpartyId
-			? `messagingStream:${this.user!.id}-${this.otherpartyId}`
+			? `messagingStream:${this.user?.id}-${this.otherpartyId}`
 			: `messagingStream:${this.groupId}`;
 
 		// Subscribe messaging stream
@@ -71,7 +71,7 @@ class MessagingChannel extends Channel {
 	}
 
 	@bindThis
-	private onEvent(data: StreamMessages['messaging']['payload'] | StreamMessages['groupMessaging']['payload']) {
+	private onEvent(data: GlobalEvents['messaging']['payload'] | GlobalEvents['groupMessaging']['payload']) {
 		if (data.type === 'typing') {
 			const id = data.body;
 			const begin = this.typers[id] == null;

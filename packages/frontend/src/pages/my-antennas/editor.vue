@@ -19,16 +19,17 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<option value="users">{{ i18n.ts._antennaSources.users }}</option>
 					<option value="list">{{ i18n.ts._antennaSources.userList }}</option>
 					<option value="group">{{ i18n.ts._antennaSources.userGroup }}</option>
+					<option value="users_blacklist">{{ i18n.ts._antennaSources.userBlacklist }}</option>
 				</MkSelect>
 				<MkSelect v-if="src === 'list'" v-model="userListId">
 					<template #label>{{ i18n.ts.userList }}</template>
 					<option v-for="list in userLists" :key="list.id" :value="list.id">{{ list.name }}</option>
 				</MkSelect>
 				<MkSelect v-else-if="src === 'group'" v-model="userGroupId">
-					<template #label>{{ i18n.ts.userGroup }}</template>
+					<template #label>{{ i18n.ts.group }}</template>
 					<option v-for="group in userGroups" :key="group.id" :value="group.id">{{ group.name }}</option>
 				</MkSelect>
-				<MkTextarea v-else-if="src === 'users'" v-model="users">
+				<MkTextarea v-else-if="src === 'users' || src === 'users_blacklist'" v-model="users">
 					<template #label>{{ i18n.ts.users }}</template>
 					<template #caption>{{ i18n.ts.antennaUsersDescription }} <button class="_textButton" @click="addUser">{{ i18n.ts.addUser }}</button></template>
 				</MkTextarea>
@@ -41,6 +42,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<template #label>{{ i18n.ts.antennaExcludeKeywords }}</template>
 					<template #caption>{{ i18n.ts.antennaKeywordsDescription }}</template>
 				</MkTextarea>
+				<MkSwitch v-model="localOnly">{{ i18n.ts.localOnly }}</MkSwitch>
 				<MkSwitch v-model="caseSensitive">{{ i18n.ts.caseSensitive }}</MkSwitch>
 				<MkSwitch v-model="withFile">{{ i18n.ts.withFileAntenna }}</MkSwitch>
 				<MkSwitch v-model="notify">{{ i18n.ts.notifyAntenna }}</MkSwitch>
@@ -62,8 +64,8 @@ import MkInput from '@/components/MkInput.vue';
 import MkTextarea from '@/components/MkTextarea.vue';
 import MkSelect from '@/components/MkSelect.vue';
 import MkSwitch from '@/components/MkSwitch.vue';
-import * as os from '@/os';
-import { i18n } from '@/i18n';
+import * as os from '@/os.js';
+import { i18n } from '@/i18n.js';
 
 const props = defineProps<{
 	antenna: any
@@ -83,6 +85,7 @@ let users: string = $ref(props.antenna.users.join('\n'));
 let keywords: string = $ref(props.antenna.keywords.map(x => x.join(' ')).join('\n'));
 let excludeKeywords: string = $ref(props.antenna.excludeKeywords.map(x => x.join(' ')).join('\n'));
 let caseSensitive: boolean = $ref(props.antenna.caseSensitive);
+let localOnly: boolean = $ref(props.antenna.localOnly);
 let withReplies: boolean = $ref(props.antenna.withReplies);
 let withFile: boolean = $ref(props.antenna.withFile);
 let notify: boolean = $ref(props.antenna.notify);
@@ -116,6 +119,7 @@ async function saveAntenna() {
 		withFile,
 		notify,
 		caseSensitive,
+		localOnly,
 		users: users.trim().split('\n').map(x => x.trim()),
 		keywords: keywords.trim().split('\n').map(x => x.trim().split(' ')),
 		excludeKeywords: excludeKeywords.trim().split('\n').map(x => x.trim().split(' ')),

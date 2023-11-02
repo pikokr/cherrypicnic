@@ -70,13 +70,13 @@ import MkTextarea from '@/components/MkTextarea.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkInput from '@/components/MkInput.vue';
 import MkColorInput from '@/components/MkColorInput.vue';
-import { selectFile } from '@/scripts/select-file';
-import * as os from '@/os';
-import { useRouter } from '@/router';
-import { definePageMetadata } from '@/scripts/page-metadata';
-import { i18n } from '@/i18n';
+import { selectFile } from '@/scripts/select-file.js';
+import * as os from '@/os.js';
+import { useRouter } from '@/router.js';
+import { definePageMetadata } from '@/scripts/page-metadata.js';
+import { i18n } from '@/i18n.js';
 import MkFolder from '@/components/MkFolder.vue';
-import MkSwitch from "@/components/MkSwitch.vue";
+import MkSwitch from '@/components/MkSwitch.vue';
 
 const Sortable = defineAsyncComponent(() => import('vuedraggable').then(x => x.default));
 
@@ -154,12 +154,9 @@ function save() {
 
 	if (props.channelId) {
 		params.channelId = props.channelId;
-		os.api('channels/update', params).then(() => {
-			os.success();
-		});
+		os.apiWithDialog('channels/update', params);
 	} else {
-		os.api('channels/create', params).then(created => {
-			os.success();
+		os.apiWithDialog('channels/create', params).then(created => {
 			router.push(`/channels/${created.id}`);
 		});
 	}

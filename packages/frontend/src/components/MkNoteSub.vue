@@ -14,7 +14,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<div>
 				<MkEvent v-if="note.event" :note="note"/>
 				<p v-if="note.cw != null" :class="$style.cw">
-					<Mfm v-if="note.cw != ''" style="margin-right: 8px;" :text="note.cw" :author="note.user" :i="$i"/>
+					<Mfm v-if="note.cw != ''" style="margin-right: 8px;" :text="note.cw" :author="note.user" :nyaize="'account'" :i="$i"/>
 					<MkCwButton v-model="showContent" style="width: 100%" :note="note"/>
 				</p>
 				<div v-show="note.cw == null || showContent">
@@ -57,13 +57,13 @@ import MkNoteHeader from '@/components/MkNoteHeader.vue';
 import MkSubNoteContent from '@/components/MkSubNoteContent.vue';
 import MkCwButton from '@/components/MkCwButton.vue';
 import MkEvent from '@/components/MkEvent.vue';
-import { notePage } from '@/filters/note';
-import * as os from '@/os';
-import { i18n } from '@/i18n';
-import { $i } from '@/account';
-import { userPage } from '@/filters/user';
-import { checkWordMute } from '@/scripts/check-word-mute';
-import { defaultStore } from '@/store';
+import { notePage } from '@/filters/note.js';
+import * as os from '@/os.js';
+import { i18n } from '@/i18n.js';
+import { $i } from '@/account.js';
+import { userPage } from '@/filters/user.js';
+import { checkWordMute } from '@/scripts/check-word-mute.js';
+import { defaultStore } from '@/store.js';
 
 let hideLine = $ref(false);
 
@@ -77,7 +77,7 @@ const props = withDefaults(defineProps<{
 	depth: 1,
 });
 
-const muted = ref(checkWordMute(props.note, $i, defaultStore.state.mutedWords));
+const muted = ref($i ? checkWordMute(props.note, $i, $i.mutedWords) : false);
 
 let showContent = $ref(false);
 let replies: Misskey.entities.Note[] = $ref([]);

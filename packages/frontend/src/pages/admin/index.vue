@@ -16,6 +16,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<MkInfo v-if="noMaintainerInformation" warn class="info">{{ i18n.ts.noMaintainerInformationWarning }} <MkA to="/admin/settings" class="_link">{{ i18n.ts.configure }}</MkA></MkInfo>
 				<MkInfo v-if="noBotProtection" warn class="info">{{ i18n.ts.noBotProtectionWarning }} <MkA to="/admin/security" class="_link">{{ i18n.ts.configure }}</MkA></MkInfo>
 				<MkInfo v-if="noEmailServer" warn class="info">{{ i18n.ts.noEmailServerWarning }} <MkA to="/admin/email-settings" class="_link">{{ i18n.ts.configure }}</MkA></MkInfo>
+				<MkInfo v-if="updateAvailable" warn class="info">{{ i18n.ts.newVersionOfClientAvailable }} <MkA to="/admin/update" class="_link">{{ i18n.ts.configure }}</MkA></MkInfo>
 
 				<MkSuperMenu :def="menuDef" :grid="narrow"></MkSuperMenu>
 			</div>
@@ -29,14 +30,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { onActivated, onMounted, onUnmounted, provide, watch } from 'vue';
-import { i18n } from '@/i18n';
+import { i18n } from '@/i18n.js';
 import MkSuperMenu from '@/components/MkSuperMenu.vue';
 import MkInfo from '@/components/MkInfo.vue';
-import { instance } from '@/instance';
-import * as os from '@/os';
-import { lookupUser } from '@/scripts/lookup-user';
-import { useRouter } from '@/router';
-import { definePageMetadata, provideMetadataReceiver } from '@/scripts/page-metadata';
+import { instance } from '@/instance.js';
+import * as os from '@/os.js';
+import { lookupUser } from '@/scripts/lookup-user.js';
+import { useRouter } from '@/router.js';
+import { definePageMetadata, provideMetadataReceiver } from '@/scripts/page-metadata.js';
+import { version } from '@/config.js';
 
 const isEmpty = (x: string | null) => x == null || x === '';
 
@@ -61,6 +63,8 @@ let noBotProtection = !instance.disableRegistration && !instance.enableHcaptcha 
 let noEmailServer = !instance.enableEmail;
 let thereIsUnresolvedAbuseReport = $ref(false);
 let currentPage = $computed(() => router.currentRef.value.child);
+let updateAvailable = $ref(false);
+let releasesCherryPick = $ref();
 
 os.api('admin/abuse-user-reports', {
 	state: 'unresolved',
@@ -68,6 +72,16 @@ os.api('admin/abuse-user-reports', {
 }).then(reports => {
 	if (reports.length > 0) thereIsUnresolvedAbuseReport = true;
 });
+
+fetch('https://api.github.com/repos/kokonect-link/cherrypick/releases', {
+	method: 'GET',
+}).then(res => res.json())
+	.then(async res => {
+		const meta = await os.api('admin/meta');
+		if (meta.enableReceivePrerelease) releasesCherryPick = res;
+		else releasesCherryPick = res.filter(x => x.prerelease === false);
+		if ((version < releasesCherryPick[0].tag_name) && (meta.skipCherryPickVersion < releasesCherryPick[0].tag_name)) updateAvailable = true;
+	});
 
 const NARROW_THRESHOLD = 600;
 const ro = new ResizeObserver((entries, observer) => {
@@ -116,6 +130,11 @@ const menuDef = $computed(() => [{
 		to: '/admin/emojis',
 		active: currentPage?.route.name === 'emojis',
 	}, {
+		icon: 'ti ti-sparkles',
+		text: i18n.ts.avatarDecorations,
+		to: '/avatar-decorations',
+		active: currentPage?.route.name === 'avatarDecorations',
+	}, {
 		icon: 'ti ti-world',
 		text: i18n.ts.federation,
 		to: '/admin/federation',
@@ -143,9 +162,14 @@ const menuDef = $computed(() => [{
 	}, {
 		icon: 'ti ti-exclamation-circle',
 		text: i18n.ts.abuseReports,
-    indicated: thereIsUnresolvedAbuseReport,
+		indicated: thereIsUnresolvedAbuseReport,
 		to: '/admin/abuses',
 		active: currentPage?.route.name === 'abuses',
+	}, {
+		icon: 'ti ti-list-search',
+		text: i18n.ts.moderationLogs,
+		to: '/admin/modlog',
+		active: currentPage?.route.name === 'modlog',
 	}],
 }, {
 	title: i18n.ts.settings,
@@ -194,6 +218,11 @@ const menuDef = $computed(() => [{
 		text: i18n.ts.proxyAccount,
 		to: '/admin/proxy-account',
 		active: currentPage?.route.name === 'proxy-account',
+	}, {
+		icon: 'ti ti-link',
+		text: i18n.ts.externalServices,
+		to: '/admin/external-services',
+		active: currentPage?.route.name === 'external-services',
 	}, {
 		icon: 'ti ti-adjustments',
 		text: i18n.ts.other,

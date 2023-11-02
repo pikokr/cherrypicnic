@@ -5,10 +5,10 @@
 
 import { Inject, Injectable } from '@nestjs/common';
 import ms from 'ms';
-import type { UserGroupsRepository, UserGroupJoiningsRepository } from '@/models/index.js';
+import type { UserGroupsRepository, UserGroupJoiningsRepository } from '@/models/_.js';
 import { IdService } from '@/core/IdService.js';
-import type { MiUserGroup } from '@/models/entities/UserGroup.js';
-import type { MiUserGroupJoining } from '@/models/entities/UserGroupJoining.js';
+import type { MiUserGroup } from '@/models/UserGroup.js';
+import type { MiUserGroupJoining } from '@/models/UserGroupJoining.js';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { UserGroupEntityService } from '@/core/entities/UserGroupEntityService.js';
 import { DI } from '@/di-symbols.js';
@@ -56,16 +56,14 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			const userGroup = await this.userGroupsRepository.insert({
-				id: this.idService.genId(),
-				createdAt: new Date(),
+				id: this.idService.gen(),
 				userId: me.id,
 				name: ps.name,
 			} as MiUserGroup).then(x => this.userGroupsRepository.findOneByOrFail(x.identifiers[0]));
 
 			// Push the owner
 			await this.userGroupJoiningsRepository.insert({
-				id: this.idService.genId(),
-				createdAt: new Date(),
+				id: this.idService.gen(),
 				userId: me.id,
 				userGroupId: userGroup.id,
 			} as MiUserGroupJoining);

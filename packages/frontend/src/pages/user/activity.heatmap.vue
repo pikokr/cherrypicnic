@@ -16,11 +16,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { onMounted, nextTick, watch } from 'vue';
 import { Chart } from 'chart.js';
 import * as Misskey from 'cherrypick-js';
-import * as os from '@/os';
-import { defaultStore } from '@/store';
-import { useChartTooltip } from '@/scripts/use-chart-tooltip';
-import { alpha } from '@/scripts/color';
-import { initChart } from '@/scripts/init-chart';
+import * as os from '@/os.js';
+import { defaultStore } from '@/store.js';
+import { useChartTooltip } from '@/scripts/use-chart-tooltip.js';
+import { alpha } from '@/scripts/color.js';
+import { initChart } from '@/scripts/init-chart.js';
 
 initChart();
 
@@ -82,7 +82,7 @@ async function renderChart() {
 
 	await nextTick();
 
-	const color = defaultStore.state.darkMode ? '#b4e900' : '#86b300';
+	const color = defaultStore.state.darkMode ? '#ffcfe6' : '#ffbcdc';
 
 	// 視覚上の分かりやすさのため上から最も大きい3つの値の平均を最大値とする
 	const max = values.slice().sort((a, b) => b - a).slice(0, 3).reduce((a, b) => a + b, 0) / 3;

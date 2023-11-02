@@ -5,10 +5,11 @@
 
 import { Inject, Injectable } from '@nestjs/common';
 import { DI } from '@/di-symbols.js';
-import type { AbuseUserReportsRepository } from '@/models/index.js';
+import type { AbuseUserReportsRepository } from '@/models/_.js';
 import { awaitAll } from '@/misc/prelude/await-all.js';
-import type { MiAbuseUserReport } from '@/models/entities/AbuseUserReport.js';
+import type { MiAbuseUserReport } from '@/models/AbuseUserReport.js';
 import { bindThis } from '@/decorators.js';
+import { IdService } from '@/core/IdService.js';
 import { UserEntityService } from './UserEntityService.js';
 
 @Injectable()
@@ -18,6 +19,7 @@ export class AbuseUserReportEntityService {
 		private abuseUserReportsRepository: AbuseUserReportsRepository,
 
 		private userEntityService: UserEntityService,
+		private idService: IdService,
 	) {
 	}
 
@@ -29,7 +31,7 @@ export class AbuseUserReportEntityService {
 
 		return await awaitAll({
 			id: report.id,
-			createdAt: report.createdAt.toISOString(),
+			createdAt: this.idService.parse(report.id).date.toISOString(),
 			comment: report.comment,
 			resolved: report.resolved,
 			reporterId: report.reporterId,

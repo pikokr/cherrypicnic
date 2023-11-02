@@ -71,7 +71,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			const { raw, packed } = await this.announcementService.create({
-				createdAt: new Date(),
 				updatedAt: null,
 				title: ps.title,
 				text: ps.text,
@@ -81,7 +80,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				forExistingUsers: ps.forExistingUsers,
 				needConfirmationToRead: ps.needConfirmationToRead,
 				userId: ps.userId,
-			});
+			}, me);
 
 			return packed;
 		});

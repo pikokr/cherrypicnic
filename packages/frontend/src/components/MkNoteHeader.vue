@@ -19,6 +19,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</div>
 	<div :class="$style.section">
 		<div :class="$style.info">
+			<span v-if="note.updatedAt" style="margin-right: 0.5em;" :title="i18n.ts.edited"><i class="ti ti-pencil"></i></span>
 			<span v-if="note.visibility !== 'public'" style="margin-right: 0.5em;">
 				<i v-if="note.visibility === 'home'" v-tooltip="i18n.ts._visibility[note.visibility]" class="ti ti-home"></i>
 				<i v-else-if="note.visibility === 'followers'" v-tooltip="i18n.ts._visibility[note.visibility]" class="ti ti-lock"></i>
@@ -33,8 +34,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<span v-if="note.localOnly" style="margin-right: 0.5em;"><i v-tooltip="i18n.ts._visibility['disableFederation']" class="ti ti-rocket-off"></i></span>
 			<span v-if="note.channel" style="margin-right: 0.5em;"><i v-tooltip="note.channel.name" class="ti ti-device-tv"></i></span>
 			<MkA :class="$style.time" :to="notePage(note)">
-				<MkTime v-if="defaultStore.state.enableAbsoluteTime" :time="note.createdAt" mode="absolute"/>
-				<MkTime v-else-if="!defaultStore.state.enableAbsoluteTime" :time="note.createdAt" mode="relative"/>
+				<MkTime v-if="defaultStore.state.enableAbsoluteTime" :time="note.createdAt" mode="absolute" colored/>
+				<MkTime v-else-if="!defaultStore.state.enableAbsoluteTime" :time="note.createdAt" mode="relative" colored/>
 			</MkA>
 		</div>
 		<div :style="$style.info"><MkInstanceTicker v-if="showTicker" :instance="note.user.instance"/></div>
@@ -45,11 +46,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script lang="ts" setup>
 import { } from 'vue';
 import * as Misskey from 'cherrypick-js';
-import { i18n } from '@/i18n';
-import { notePage } from '@/filters/note';
-import { userPage } from '@/filters/user';
-import { defaultStore } from '@/store';
-import { deepClone } from '@/scripts/clone';
+import { i18n } from '@/i18n.js';
+import { notePage } from '@/filters/note.js';
+import { userPage } from '@/filters/user.js';
+import { defaultStore } from '@/store.js';
+import { deepClone } from '@/scripts/clone.js';
 import MkInstanceTicker from '@/components/MkInstanceTicker.vue';
 
 const props = defineProps<{
@@ -86,12 +87,17 @@ const showTicker = (defaultStore.state.instanceTicker === 'always') || (defaultS
 	display: block;
 	margin: 0 .5em 0 0;
 	padding: 0;
-	overflow: hidden;
+	overflow: scroll;
+  overflow-wrap: anywhere;
 	font-size: 1em;
 	font-weight: bold;
 	text-decoration: none;
 	text-overflow: ellipsis;
 	max-width: 300px;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
 	&:hover {
 		color: var(--nameHover);
@@ -112,9 +118,14 @@ const showTicker = (defaultStore.state.instanceTicker === 'always') || (defaultS
 .username {
 	flex-shrink: 9999999;
 	margin: 0 .5em 0 0;
-	overflow: hidden;
+	overflow: scroll;
 	text-overflow: ellipsis;
 	font-size: .95em;
+  max-width: 300px;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .info {
@@ -149,7 +160,7 @@ const showTicker = (defaultStore.state.instanceTicker === 'always') || (defaultS
 }
 
 @container (max-width: 500px) {
-	.name {
+	.name, .username {
 		max-width: 200px;
 	}
 }

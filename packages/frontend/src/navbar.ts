@@ -4,15 +4,15 @@
  */
 
 import { computed, defineAsyncComponent, reactive } from 'vue';
-import { $i } from './account';
-import { miLocalStorage } from './local-storage';
-import { openInstanceMenu } from './ui/_common_/common';
-import { lookup } from './scripts/lookup';
-import * as os from '@/os';
-import { i18n } from '@/i18n';
-import { ui } from '@/config';
-import { defaultStore } from '@/store';
-import { unisonReload } from '@/scripts/unison-reload';
+import { $i } from '@/account.js';
+import { miLocalStorage } from '@/local-storage.js';
+import { openInstanceMenu, openToolsMenu } from '@/ui/_common_/common.js';
+import { lookup } from '@/scripts/lookup.js';
+import * as os from '@/os.js';
+import { i18n } from '@/i18n.js';
+import { ui } from '@/config.js';
+import { defaultStore } from '@/store.js';
+import { unisonReload } from '@/scripts/unison-reload.js';
 
 export const navbarItemDef = reactive({
 	notifications: {
@@ -20,6 +20,15 @@ export const navbarItemDef = reactive({
 		icon: 'ti ti-bell',
 		show: computed(() => $i != null),
 		indicated: computed(() => $i != null && $i.hasUnreadNotification),
+		indicateValue: computed(() => {
+			if (!$i || $i.unreadNotificationsCount === 0) return '';
+
+			if ($i.unreadNotificationsCount > 99) {
+				return '99+';
+			} else {
+				return $i.unreadNotificationsCount.toString();
+			}
+		}),
 		to: '/my/notifications',
 	},
 	messaging: {
@@ -187,9 +196,7 @@ export const navbarItemDef = reactive({
 					defaultStore.set('timelineTutorial', 0);
 					defaultStore.set('tlHomeHintClosed', false);
 					defaultStore.set('tlLocalHintClosed', false);
-					defaultStore.set('tlMediaHintClosed', false);
 					defaultStore.set('tlSocialHintClosed', false);
-					defaultStore.set('tlCatHintClosed', false);
 					defaultStore.set('tlGlobalHintClosed', false);
 					setTimeout(unisonReload, 100);
 				},
@@ -201,6 +208,13 @@ export const navbarItemDef = reactive({
 		icon: 'ti ti-info-circle',
 		action: (ev) => {
 			openInstanceMenu(ev);
+		},
+	},
+	tools: {
+		title: i18n.ts.tools,
+		icon: 'ti ti-tool',
+		action: (ev) => {
+			openToolsMenu(ev);
 		},
 	},
 	reload: {

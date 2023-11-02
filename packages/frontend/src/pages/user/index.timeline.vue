@@ -4,18 +4,26 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<MkSpacer :contentMax="800" style="padding-top: 0">
-	<MkStickyContainer>
-		<template #header>
-			<MkTab v-model="include" :class="$style.tab">
-				<option :value="null">{{ i18n.ts.notes }}</option>
-				<option value="replies">{{ i18n.ts.notesAndReplies }}</option>
-				<option value="files">{{ i18n.ts.withFiles }}</option>
-			</MkTab>
-		</template>
-		<MkNotes :noGap="true" :pagination="pagination" :class="$style.tl"/>
-	</MkStickyContainer>
-</MkSpacer>
+<MkStickyContainer>
+	<template #header>
+		<MkTab v-if="($i && ($i.id === user.id)) || user.publicReactions" v-model="include" :class="$style.tab">
+			<option :value="null">{{ i18n.ts.notes }}</option>
+			<option value="all">{{ i18n.ts.all }}</option>
+			<option value="featured">{{ i18n.ts.featured }}</option>
+			<option value="files">{{ i18n.ts.withFiles }}</option>
+			<option value="reactions">{{ i18n.ts.reaction }}</option>
+		</MkTab>
+		<MkTab v-else v-model="include" :class="$style.tab">
+			<option :value="null">{{ i18n.ts.notes }}</option>
+			<option value="all">{{ i18n.ts.all }}</option>
+			<option value="featured">{{ i18n.ts.featured }}</option>
+			<option value="files">{{ i18n.ts.withFiles }}</option>
+		</MkTab>
+	</template>
+	<MkNotes v-if="include === 'featured'" :noGap="true" :pagination="featuredPagination" :class="$style.tl"/>
+	<XReactions v-else-if="include === 'reactions'" :user="user"/>
+	<MkNotes v-else :noGap="true" :pagination="pagination" :class="$style.tl"/>
+</MkStickyContainer>
 </template>
 
 <script lang="ts" setup>
@@ -23,7 +31,9 @@ import { ref, computed } from 'vue';
 import * as Misskey from 'cherrypick-js';
 import MkNotes from '@/components/MkNotes.vue';
 import MkTab from '@/components/MkTab.vue';
-import { i18n } from '@/i18n';
+import XReactions from '@/pages/user/reactions.vue';
+import { i18n } from '@/i18n.js';
+import { $i } from '@/account.js';
 
 const props = defineProps<{
 	user: Misskey.entities.UserDetailed;
@@ -36,8 +46,18 @@ const pagination = {
 	limit: 10,
 	params: computed(() => ({
 		userId: props.user.id,
-		includeReplies: include.value === 'replies' || include.value === 'files',
+		withRenotes: include.value === 'all',
+		withReplies: include.value === 'all',
+		withChannelNotes: include.value === 'all',
 		withFiles: include.value === 'files',
+	})),
+};
+
+const featuredPagination = {
+	endpoint: 'users/featured-notes' as const,
+	limit: 10,
+	params: computed(() => ({
+		userId: props.user.id,
 	})),
 };
 </script>
@@ -51,7 +71,7 @@ const pagination = {
 
 .tl {
 	background: var(--bg);
-    border-radius: var(--radius);
-    overflow: clip;
+	border-radius: var(--radius);
+	overflow: clip;
 }
 </style>

@@ -22,23 +22,29 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { onMounted, onUnmounted } from 'vue';
-import { useStream } from '@/stream';
-import { i18n } from '@/i18n';
+import { useStream, isReloading } from '@/stream.js';
+import { i18n } from '@/i18n.js';
 import MkButton from '@/components/MkButton.vue';
-import * as os from '@/os';
-import { defaultStore } from '@/store';
-import { eventBus } from '@/scripts/cherrypick/eventBus';
+import * as os from '@/os.js';
+import { defaultStore } from '@/store.js';
+import { globalEvents } from '@/events.js';
 
 const zIndex = os.claimZIndex('high');
 
 let hasRequireRefresh = $ref(false);
 let hasDisconnected = $ref(false);
+let timeoutId = $ref<number>();
 
 function onDisconnected() {
-	hasDisconnected = true;
+	if (isReloading) return;
+	window.clearTimeout(timeoutId);
+	timeoutId = window.setTimeout(() => {
+		hasDisconnected = true;
+	}, 1000 * 10);
 }
 
 function resetDisconnected() {
+	window.clearTimeout(timeoutId);
 	hasDisconnected = false;
 }
 
@@ -50,15 +56,18 @@ function reload() {
 	location.reload();
 }
 
+useStream().on('_connected_', resetDisconnected);
 useStream().on('_disconnected_', onDisconnected);
 
 onMounted(() => {
-	eventBus.on('hasRequireRefresh', (hasRequireRefresh_receive) => {
+	globalEvents.on('hasRequireRefresh', (hasRequireRefresh_receive) => {
 		hasRequireRefresh = hasRequireRefresh_receive;
 	});
 });
 
 onUnmounted(() => {
+	window.clearTimeout(timeoutId);
+	useStream().off('_connected_', resetDisconnected);
 	useStream().off('_disconnected_', onDisconnected);
 });
 </script>

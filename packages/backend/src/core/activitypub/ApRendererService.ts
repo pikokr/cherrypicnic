@@ -9,25 +9,26 @@ import { In } from 'typeorm';
 import * as mfm from 'cherrypick-mfm-js';
 import { DI } from '@/di-symbols.js';
 import type { Config } from '@/config.js';
-import type { MiPartialLocalUser, MiLocalUser, MiPartialRemoteUser, MiRemoteUser, MiUser } from '@/models/entities/User.js';
-import type { IMentionedRemoteUsers, MiNote } from '@/models/entities/Note.js';
-import type { MiBlocking } from '@/models/entities/Blocking.js';
-import type { MiRelay } from '@/models/entities/Relay.js';
-import type { MiDriveFile } from '@/models/entities/DriveFile.js';
-import type { MiNoteReaction } from '@/models/entities/NoteReaction.js';
-import type { MiEmoji } from '@/models/entities/Emoji.js';
-import type { MiPoll } from '@/models/entities/Poll.js';
-import type { MiPollVote } from '@/models/entities/PollVote.js';
-import type { MiMessagingMessage } from '@/models/entities/MessagingMessage.js';
+import type { MiPartialLocalUser, MiLocalUser, MiPartialRemoteUser, MiRemoteUser, MiUser } from '@/models/User.js';
+import type { IMentionedRemoteUsers, MiNote } from '@/models/Note.js';
+import type { MiBlocking } from '@/models/Blocking.js';
+import type { MiRelay } from '@/models/Relay.js';
+import type { MiDriveFile } from '@/models/DriveFile.js';
+import type { MiNoteReaction } from '@/models/NoteReaction.js';
+import type { MiEmoji } from '@/models/Emoji.js';
+import type { MiPoll } from '@/models/Poll.js';
+import type { MiPollVote } from '@/models/PollVote.js';
+import type { MiMessagingMessage } from '@/models/MessagingMessage.js';
 import { UserKeypairService } from '@/core/UserKeypairService.js';
 import { MfmService } from '@/core/MfmService.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
 import { DriveFileEntityService } from '@/core/entities/DriveFileEntityService.js';
-import type { MiUserKeypair } from '@/models/entities/UserKeypair.js';
-import type { UsersRepository, UserProfilesRepository, NotesRepository, DriveFilesRepository, PollsRepository, EventsRepository } from '@/models/index.js';
+import type { MiUserKeypair } from '@/models/UserKeypair.js';
+import type { UsersRepository, UserProfilesRepository, NotesRepository, DriveFilesRepository, PollsRepository, EventsRepository } from '@/models/_.js';
 import { bindThis } from '@/decorators.js';
 import { CustomEmojiService } from '@/core/CustomEmojiService.js';
 import { isNotNull } from '@/misc/is-not-null.js';
+import { IdService } from '@/core/IdService.js';
 import { LdSignatureService } from './LdSignatureService.js';
 import { ApMfmService } from './ApMfmService.js';
 import type { IAccept, IActivity, IAdd, IAnnounce, IApDocument, IApEmoji, IApHashtag, IApImage, IApMention, IBlock, ICreate, IDelete, IFlag, IFollow, IKey, ILike, IMove, IObject, IPost, IQuestion, IRead, IReject, IRemove, ITombstone, IUndo, IUpdate } from './type.js';
@@ -63,6 +64,7 @@ export class ApRendererService {
 		private userKeypairService: UserKeypairService,
 		private apMfmService: ApMfmService,
 		private mfmService: MfmService,
+		private idService: IdService,
 	) {
 	}
 
@@ -109,7 +111,8 @@ export class ApRendererService {
 			id: `${this.config.url}/notes/${note.id}/activity`,
 			actor: this.userEntityService.genLocalUserUri(note.userId),
 			type: 'Announce',
-			published: note.createdAt.toISOString(),
+			published: this.idService.parse(note.id).date.toISOString(),
+			updated: note.updatedAt?.toISOString() ?? undefined,
 			to,
 			cc,
 			object,
@@ -141,7 +144,7 @@ export class ApRendererService {
 			id: `${this.config.url}/notes/${note.id}/activity`,
 			actor: this.userEntityService.genLocalUserUri(note.userId),
 			type: 'Create',
-			published: note.createdAt.toISOString(),
+			published: this.idService.parse(note.id).date.toISOString(),
 			object,
 		};
 
@@ -166,7 +169,7 @@ export class ApRendererService {
 		return {
 			type: 'Document',
 			mediaType: file.webpublicType ?? file.type,
-			url: this.driveFileEntityService.getPublicUrl(file),
+			url: this.driveFileEntityService.getPublicUrl(file, undefined, true),
 			name: file.comment,
 		};
 	}
@@ -245,7 +248,7 @@ export class ApRendererService {
 	public renderImage(file: MiDriveFile): IApImage {
 		return {
 			type: 'Image',
-			url: this.driveFileEntityService.getPublicUrl(file),
+			url: this.driveFileEntityService.getPublicUrl(file, undefined, true),
 			sensitive: file.isSensitive,
 			name: file.comment,
 		};
@@ -457,7 +460,8 @@ export class ApRendererService {
 			},
 			_misskey_quote: quote,
 			quoteUrl: quote,
-			published: note.createdAt.toISOString(),
+			published: this.idService.parse(note.id).date.toISOString(),
+			updated: note.updatedAt?.toISOString() ?? undefined,
 			to,
 			cc,
 			inReplyTo,
@@ -515,6 +519,7 @@ export class ApRendererService {
 			preferredUsername: user.username,
 			name: user.name,
 			summary: profile.description ? this.mfmService.toHtml(mfm.parse(profile.description)) : null,
+			_misskey_summary: profile.description,
 			icon: avatar ? this.renderImage(avatar) : null,
 			image: banner ? this.renderImage(banner) : null,
 			tag,
@@ -673,6 +678,7 @@ export class ApRendererService {
 					'_misskey_quote': 'misskey:_misskey_quote',
 					'_misskey_reaction': 'misskey:_misskey_reaction',
 					'_misskey_votes': 'misskey:_misskey_votes',
+					'_misskey_summary': 'misskey:_misskey_summary',
 					'_misskey_talk': 'misskey:_misskey_talk',
 					'isCat': 'misskey:isCat',
 					// vcard
@@ -727,7 +733,7 @@ export class ApRendererService {
 	 * @param orderedItems attached objects (optional)
 	 */
 	@bindThis
-	public renderOrderedCollection(id: string, totalItems: number, first?: string, last?: string, orderedItems?: IObject[]) {
+	public renderOrderedCollection(id: string | null, totalItems: number, first?: string, last?: string, orderedItems?: IObject[]) {
 		const page: any = {
 			id,
 			type: 'OrderedCollection',

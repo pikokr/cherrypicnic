@@ -6,7 +6,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { IdService } from '@/core/IdService.js';
-import type { UserListsRepository, UserGroupJoiningsRepository, AntennasRepository } from '@/models/index.js';
+import type { UserListsRepository, UserGroupJoiningsRepository, AntennasRepository } from '@/models/_.js';
 import { GlobalEventService } from '@/core/GlobalEventService.js';
 import { AntennaEntityService } from '@/core/entities/AntennaEntityService.js';
 import { DI } from '@/di-symbols.js';
@@ -53,7 +53,7 @@ export const paramDef = {
 	type: 'object',
 	properties: {
 		name: { type: 'string', minLength: 1, maxLength: 100 },
-		src: { type: 'string', enum: ['home', 'all', 'users', 'list', 'group'] },
+		src: { type: 'string', enum: ['home', 'all', 'users', 'list', 'group', 'users_blacklist'] },
 		userListId: { type: 'string', format: 'misskey:id', nullable: true },
 		userGroupId: { type: 'string', format: 'misskey:id', nullable: true },
 		keywords: { type: 'array', items: {
@@ -70,6 +70,7 @@ export const paramDef = {
 			type: 'string',
 		} },
 		caseSensitive: { type: 'boolean' },
+		localOnly: { type: 'boolean' },
 		withReplies: { type: 'boolean' },
 		withFile: { type: 'boolean' },
 		notify: { type: 'boolean' },
@@ -132,8 +133,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			const now = new Date();
 
 			const antenna = await this.antennasRepository.insert({
-				id: this.idService.genId(),
-				createdAt: now,
+				id: this.idService.gen(now.getTime()),
 				lastUsedAt: now,
 				userId: me.id,
 				name: ps.name,
@@ -144,6 +144,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				excludeKeywords: ps.excludeKeywords,
 				users: ps.users,
 				caseSensitive: ps.caseSensitive,
+				localOnly: ps.localOnly,
 				withReplies: ps.withReplies,
 				withFile: ps.withFile,
 				notify: ps.notify,

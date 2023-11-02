@@ -6,7 +6,7 @@
 import { IsNull, LessThanOrEqual, MoreThan, Brackets } from 'typeorm';
 import { Inject, Injectable } from '@nestjs/common';
 import JSON5 from 'json5';
-import type { AdsRepository, UsersRepository } from '@/models/index.js';
+import type { AdsRepository, UsersRepository } from '@/models/_.js';
 import { MAX_NOTE_TEXT_LENGTH } from '@/const.js';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
@@ -36,9 +36,17 @@ export const meta = {
 				type: 'string',
 				optional: false, nullable: false,
 			},
+			basedMisskeyVersion: {
+				type: 'string',
+				optional: false, nullable: false,
+			},
 			name: {
 				type: 'string',
 				optional: false, nullable: false,
+			},
+			shortName: {
+				type: 'string',
+				optional: false, nullable: true,
 			},
 			uri: {
 				type: 'string',
@@ -177,6 +185,11 @@ export const meta = {
 					},
 				},
 			},
+			notesPerOneAd: {
+				type: 'number',
+				optional: false, nullable: false,
+				default: 0,
+			},
 			requireSetup: {
 				type: 'boolean',
 				optional: false, nullable: false,
@@ -210,11 +223,11 @@ export const meta = {
 						type: 'boolean',
 						optional: false, nullable: false,
 					},
-					localTimeLine: {
+					localTimeline: {
 						type: 'boolean',
 						optional: false, nullable: false,
 					},
-					globalTimeLine: {
+					globalTimeline: {
 						type: 'boolean',
 						optional: false, nullable: false,
 					},
@@ -286,14 +299,18 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				maintainerEmail: instance.maintainerEmail,
 
 				version: this.config.version,
+				basedMisskeyVersion: this.config.basedMisskeyVersion,
 
 				name: instance.name,
+				shortName: instance.shortName,
 				uri: this.config.url,
 				description: instance.description,
 				langs: instance.langs,
 				tosUrl: instance.termsOfServiceUrl,
 				repositoryUrl: instance.repositoryUrl,
 				feedbackUrl: instance.feedbackUrl,
+				impressumUrl: instance.impressumUrl,
+				privacyPolicyUrl: instance.privacyPolicyUrl,
 				disableRegistration: instance.disableRegistration,
 				emailRequiredForSignup: instance.emailRequiredForSignup,
 				enableHcaptcha: instance.enableHcaptcha,
@@ -324,6 +341,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					imageUrl: ad.imageUrl,
 					dayOfWeek: ad.dayOfWeek,
 				})),
+				notesPerOneAd: instance.notesPerOneAd,
 				enableEmail: instance.enableEmail,
 				enableServiceWorker: instance.enableServiceWorker,
 

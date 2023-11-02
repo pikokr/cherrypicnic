@@ -6,9 +6,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <div role="menu">
 	<div
-		ref="itemsEl" v-hotkey="keymap"
-		class="_popup _shadow"
-		:class="[$style.root, { [$style.center]: align === 'center', [$style.asDrawer]: asDrawer }]"
+		ref="itemsEl" v-hotkey="keymap" v-vibrate="ColdDeviceStorage.get('vibrateSystem') ? 5 : ''"
+		class="_shadow"
+		:class="[$style.root, { [$style.center]: align === 'center', [$style.asDrawer]: asDrawer, _popup: !defaultStore.state.useBlurEffect || !defaultStore.state.useBlurEffectForModal || !defaultStore.state.removeModalBgColorForBlur, _popupAcrylic: defaultStore.state.useBlurEffect && defaultStore.state.useBlurEffectForModal && defaultStore.state.removeModalBgColorForBlur }]"
 		:style="{ width: (width && !asDrawer) ? width + 'px' : '', maxHeight: maxHeight ? maxHeight + 'px' : '' }"
 		@contextmenu.self="e => e.preventDefault()"
 	>
@@ -36,14 +36,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<span v-if="item.indicate" :class="$style.indicator"><i class="_indicatorCircle"></i></span>
 			</button>
 			<button v-else-if="item.type === 'switch'" role="menuitemcheckbox" :tabindex="i" class="_button" :class="[$style.item, $style.switch, { [$style.switchDisabled]: item.disabled } ]" @click="switchItem(item)" @mouseenter.passive="onItemMouseEnter(item)" @mouseleave.passive="onItemMouseLeave(item)">
-				<MkSwitchButton :class="$style.switchButton" :checked="item.ref" :disabled="item.disabled" @toggle="switchItem(item)" />
+				<MkSwitchButton :class="$style.switchButton" :checked="item.ref" :disabled="item.disabled" @toggle="switchItem(item)"/>
 				<span :class="$style.switchText">{{ item.text }}</span>
 			</button>
-			<div v-else-if="item.type === 'parent'" role="menuitem" :tabindex="i" :class="[$style.item, $style.parent, { [$style.childShowing]: childShowingItem === item }]" @mouseenter="preferClick ? null : showChildren(item, $event)" @click="!preferClick ? null : showChildren(item, $event)">
-				<i v-if="item.icon" class="ti-fw" :class="[$style.icon, item.icon]"></i>
-				<span>{{ item.text }}</span>
-				<span :class="$style.caret"><i class="ti ti-chevron-right ti-fw"></i></span>
-			</div>
+			<button v-else-if="item.type === 'parent'" class="_button" role="menuitem" :tabindex="i" :class="[$style.item, $style.parent, { [$style.childShowing]: childShowingItem === item }]" @mouseenter="preferClick ? null : showChildren(item, $event)" @click="!preferClick ? null : showChildren(item, $event)">
+				<i v-if="item.icon" class="ti-fw" :class="[$style.icon, item.icon]" style="pointer-events: none;"></i>
+				<span style="pointer-events: none;">{{ item.text }}</span>
+				<span :class="$style.caret" style="pointer-events: none;"><i class="ti ti-chevron-right ti-fw"></i></span>
+			</button>
 			<button v-else :tabindex="i" class="_button" role="menuitem" :class="[$style.item, { [$style.danger]: item.danger, [$style.active]: item.active }]" :disabled="item.active" @click="clicked(item.action, $event)" @mouseenter.passive="onItemMouseEnter(item)" @mouseleave.passive="onItemMouseLeave(item)">
 				<i v-if="item.icon" class="ti-fw" :class="[$style.icon, item.icon]"></i>
 				<MkAvatar v-if="item.avatar" :user="item.avatar" :class="$style.avatar"/>
@@ -63,17 +63,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts">
 import { Ref, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { focusPrev, focusNext } from '@/scripts/focus';
+import { focusPrev, focusNext } from '@/scripts/focus.js';
 import MkSwitchButton from '@/components/MkSwitch.button.vue';
-import { MenuItem, InnerMenuItem, MenuPending, MenuAction, MenuSwitch, MenuParent } from '@/types/menu';
-import * as os from '@/os';
-import { i18n } from '@/i18n';
-import { isTouchUsing } from '@/scripts/touch';
+import { MenuItem, InnerMenuItem, MenuPending, MenuAction, MenuSwitch, MenuParent } from '@/types/menu.js';
+import * as os from '@/os.js';
+import { i18n } from '@/i18n.js';
+import { isTouchUsing } from '@/scripts/touch.js';
 
 const childrenCache = new WeakMap<MenuParent, MenuItem[]>();
 </script>
 
 <script lang="ts" setup>
+import { ColdDeviceStorage, defaultStore } from '@/store.js';
 const XChild = defineAsyncComponent(() => import('./MkMenu.child.vue'));
 
 const props = defineProps<{
@@ -145,11 +146,13 @@ const onGlobalMousedown = (event: MouseEvent) => {
 };
 
 let childCloseTimer: null | number = null;
+
 function onItemMouseEnter(item) {
 	childCloseTimer = window.setTimeout(() => {
 		closeChild();
 	}, 300);
 }
+
 function onItemMouseLeave(item) {
 	if (childCloseTimer) window.clearTimeout(childCloseTimer);
 }

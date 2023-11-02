@@ -4,7 +4,7 @@
  */
 
 import { bindThis } from '@/decorators.js';
-import type Connection from './index.js';
+import type Connection from './Connection.js';
 
 /**
  * Stream channel
@@ -67,6 +67,8 @@ export default abstract class Channel {
 	}
 
 	public abstract init(params: any): void;
+
 	public dispose?(): void;
+
 	public onMessage?(type: string, body: any): void;
 }

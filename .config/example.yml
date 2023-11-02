@@ -105,6 +105,16 @@ redis:
 #  # You can specify more ioredis options...
 #  #username: example-username
 
+#redisForTimelines:
+#  host: localhost
+#  port: 6379
+#  #family: 0  # 0=Both, 4=IPv4, 6=IPv6
+#  #pass: example-pass
+#  #prefix: example-prefix
+#  #db: 1
+#  # You can specify more ioredis options...
+#  #username: example-username
+
 #   ┌───────────────────────────┐
 #───┘ MeiliSearch configuration └─────────────────────────────
 
@@ -172,6 +182,9 @@ id: 'aidx'
 #  saKeyPath: /path/to/service-account-key.json
 #  logName: cherrypick
 
+# Override the file URL rendering in ActivityPub (Object Storage file only)
+#apFileBaseUrl: https://example.tld/
+
 # Proxy for HTTP/HTTPS
 #proxy: http://127.0.0.1:3128
 
@@ -212,3 +225,6 @@ signToActivityPubGet: true
 
 # Upload or download file size limits (bytes)
 #maxFileSize: 262144000
+
+# PID File of master process
+#pidFile: /tmp/cherrypick.pid

@@ -5,13 +5,13 @@
 
 // TODO: なんでもかんでもos.tsに突っ込むのやめたいのでよしなに分割する
 
-import { pendingApiRequestsCount, api, apiGet } from '@/scripts/api';
-export { pendingApiRequestsCount, api, apiGet };
+import { pendingApiRequestsCount, api, apiExternal, apiGet } from '@/scripts/api.js';
+export { pendingApiRequestsCount, api, apiExternal, apiGet };
 import { Component, markRaw, Ref, ref, defineAsyncComponent } from 'vue';
 import { EventEmitter } from 'eventemitter3';
 import insertTextAtCursor from 'insert-text-at-cursor';
 import * as Misskey from 'cherrypick-js';
-import { i18n } from './i18n';
+import { i18n } from '@/i18n.js';
 import MkPostFormDialog from '@/components/MkPostFormDialog.vue';
 import MkWaitingDialog from '@/components/MkWaitingDialog.vue';
 import MkPageWindow from '@/components/MkPageWindow.vue';
@@ -19,13 +19,14 @@ import MkToast from '@/components/MkToast.vue';
 import MkNoteToast from '@/components/MkNoteToast.vue';
 import MkWelcomeToast from '@/components/MkWelcomeToast.vue';
 import MkDialog from '@/components/MkDialog.vue';
+import MkPasswordDialog from '@/components/MkPasswordDialog.vue';
 import MkEmojiPickerDialog from '@/components/MkEmojiPickerDialog.vue';
 import MkEmojiPickerWindow from '@/components/MkEmojiPickerWindow.vue';
 import MkPopupMenu from '@/components/MkPopupMenu.vue';
 import MkContextMenu from '@/components/MkContextMenu.vue';
-import { MenuItem } from '@/types/menu';
-import copyToClipboard from './scripts/copy-to-clipboard';
-import { showMovedDialog } from './scripts/show-moved-dialog';
+import { MenuItem } from '@/types/menu.js';
+import copyToClipboard from '@/scripts/copy-to-clipboard.js';
+import { showMovedDialog } from '@/scripts/show-moved-dialog.js';
 
 export const openingWindowsCount = ref(0);
 
@@ -184,9 +185,10 @@ export function toast(message: string) {
 	}, {}, 'closed');
 }
 
-export function noteToast(message: string) {
+export function noteToast(message: string, icon: string) {
 	popup(MkNoteToast, {
 		message,
+		icon,
 	}, {}, 'closed');
 }
 
@@ -348,6 +350,18 @@ export function inputDate(props: {
 	});
 }
 
+export function authenticateDialog(): Promise<{ canceled: true; result: undefined; } | {
+	canceled: false; result: { password: string; token: string | null; };
+}> {
+	return new Promise((resolve, reject) => {
+		popup(MkPasswordDialog, {}, {
+			done: result => {
+				resolve(result ? { canceled: false, result } : { canceled: true, result: undefined });
+			},
+		}, 'closed');
+	});
+}
+
 export function select<C = any>(props: {
 	title?: string | null;
 	text?: string | null;
@@ -422,10 +436,11 @@ export function form(title, form) {
 	});
 }
 
-export async function selectUser(opts: { includeSelf?: boolean } = {}) {
+export async function selectUser(opts: { includeSelf?: boolean, includeHost?: boolean } = {}) {
 	return new Promise((resolve, reject) => {
 		popup(defineAsyncComponent(() => import('@/components/MkUserSelectDialog.vue')), {
 			includeSelf: opts.includeSelf,
+			includeHost: opts.includeHost,
 		}, {
 			ok: user => {
 				resolve(user);

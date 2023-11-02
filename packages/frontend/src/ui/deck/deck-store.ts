@@ -6,9 +6,9 @@
 import { throttle } from 'throttle-debounce';
 import { markRaw } from 'vue';
 import { notificationTypes } from 'cherrypick-js';
-import { Storage } from '../../pizzax';
-import { api } from '@/os';
-import { deepClone } from '@/scripts/clone';
+import { Storage } from '@/pizzax.js';
+import { api } from '@/os.js';
+import { deepClone } from '@/scripts/clone.js';
 
 type ColumnWidget = {
 	name: string;
@@ -28,8 +28,12 @@ export type Column = {
 	listId?: string;
 	channelId?: string;
 	roleId?: string;
-	includingTypes?: typeof notificationTypes[number][];
-	tl?: 'home' | 'local' | 'media' | 'social' | 'cat' | 'global';
+	excludeTypes?: typeof notificationTypes[number][];
+	tl?: 'home' | 'local' | 'social' | 'global';
+	withRenotes?: boolean;
+	withReplies?: boolean;
+	onlyFiles?: boolean;
+	onlyCats?: boolean;
 };
 
 export const deckStore = markRaw(new Storage('deck', {

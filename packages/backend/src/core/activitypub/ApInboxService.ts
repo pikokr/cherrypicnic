@@ -14,6 +14,7 @@ import { NotePiningService } from '@/core/NotePiningService.js';
 import { UserBlockingService } from '@/core/UserBlockingService.js';
 import { NoteDeleteService } from '@/core/NoteDeleteService.js';
 import { NoteCreateService } from '@/core/NoteCreateService.js';
+import { NoteUpdateService } from '@/core/NoteUpdateService.js';
 import { concat, toArray, toSingle, unique } from '@/misc/prelude/array.js';
 import { AppLockService } from '@/core/AppLockService.js';
 import type Logger from '@/logger.js';
@@ -25,9 +26,10 @@ import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
 import { QueueService } from '@/core/QueueService.js';
 import { MessagingService } from '@/core/MessagingService.js';
-import type { UsersRepository, NotesRepository, FollowingsRepository, MessagingMessagesRepository, AbuseUserReportsRepository, FollowRequestsRepository } from '@/models/index.js';
+import type { UsersRepository, NotesRepository, FollowingsRepository, MessagingMessagesRepository, AbuseUserReportsRepository, FollowRequestsRepository } from '@/models/_.js';
 import { bindThis } from '@/decorators.js';
-import type { MiRemoteUser } from '@/models/entities/User.js';
+import type { MiRemoteUser } from '@/models/User.js';
+import { GlobalEventService } from '@/core/GlobalEventService.js';
 import { getApHrefNullable, getApId, getApIds, getApType, isAccept, isActor, isAdd, isAnnounce, isBlock, isCollection, isCollectionOrOrderedCollection, isCreate, isDelete, isFlag, isFollow, isLike, isMove, isPost, isRead, isReject, isRemove, isTombstone, isUndo, isUpdate, validActor, validPost } from './type.js';
 import { ApNoteService } from './models/ApNoteService.js';
 import { ApLoggerService } from './ApLoggerService.js';
@@ -77,6 +79,7 @@ export class ApInboxService {
 		private notePiningService: NotePiningService,
 		private userBlockingService: UserBlockingService,
 		private noteCreateService: NoteCreateService,
+		private noteUpdateService: NoteUpdateService,
 		private noteDeleteService: NoteDeleteService,
 		private appLockService: AppLockService,
 		private apResolverService: ApResolverService,
@@ -87,6 +90,7 @@ export class ApInboxService {
 		private apQuestionService: ApQuestionService,
 		private queueService: QueueService,
 		private messagingService: MessagingService,
+		private globalEventService: GlobalEventService,
 	) {
 		this.logger = this.apLoggerService.logger;
 	}
@@ -171,7 +175,7 @@ export class ApInboxService {
 		}
 
 		// don't queue because the sender may attempt again when timeout
-		await this.userFollowingService.follow(actor, followee, activity.id);
+		await this.userFollowingService.follow(actor, followee, { requestId: activity.id });
 		return 'ok';
 	}
 
@@ -301,11 +305,14 @@ export class ApInboxService {
 		const meta = await this.metaService.fetch();
 		if (this.utilityService.isBlockedHost(meta.blockedHosts, this.utilityService.extractDbHost(uri))) return;
 
+		const relays = await this.relayService.getAcceptedRelays();
+		const fromRelay = !!actor.inbox && relays.map(r => r.inbox).includes(actor.inbox);
+
 		const unlock = await this.appLockService.getApLock(uri);
 
 		try {
 			// 既に同じURIを持つものが登録されていないかチェック
-			const exist = await this.apNoteService.fetchNote(uri);
+			const exist = await this.apNoteService.fetchNote(fromRelay ? targetUri : uri);
 			if (exist) {
 				return;
 			}
@@ -330,6 +337,12 @@ export class ApInboxService {
 
 			if (!await this.noteEntityService.isVisibleForMe(renote, actor.id)) {
 				this.logger.warn('skip: invalid actor for this activity');
+				return;
+			}
+
+			if (fromRelay) {
+				const noteObj = await this.noteEntityService.pack(renote);
+				this.globalEventService.publishNotesStream(noteObj);
 				return;
 			}
 
@@ -553,8 +566,7 @@ export class ApInboxService {
 		if (users.length < 1) return 'skip';
 
 		const report = await this.abuseUserReportsRepository.insert({
-			id: this.idService.genId(),
-			createdAt: new Date(),
+			id: this.idService.gen(),
 			targetUserId: users[0].id,
 			targetUserHost: users[0].host,
 			reporterId: actor.id,
@@ -764,11 +776,13 @@ export class ApInboxService {
 
 	@bindThis
 	private async update(actor: MiRemoteUser, activity: IUpdate): Promise<string> {
+		const uri = getApId(activity);
+
 		if (actor.uri !== activity.actor) {
 			return 'skip: invalid actor';
 		}
 
-		this.logger.debug('Update');
+		this.logger.debug(`Update: ${uri}`);
 
 		const resolver = this.apResolverService.createResolver();
 
@@ -783,8 +797,45 @@ export class ApInboxService {
 		} else if (getApType(object) === 'Question') {
 			await this.apQuestionService.updateQuestion(object, resolver).catch(err => console.error(err));
 			return 'ok: Question updated';
+		} else if (getApType(object) === 'Note') {
+			await this.updateNote(resolver, actor, object, false, activity);
+			return 'ok: Note updated';
 		} else {
 			return `skip: Unknown type: ${getApType(object)}`;
+		}
+	}
+
+	@bindThis
+	private async updateNote(resolver: Resolver, actor: MiRemoteUser, note: IObject, silent = false, activity?: IUpdate): Promise<string> {
+		const uri = getApId(note);
+
+		if (typeof note === 'object') {
+			if (actor.uri !== note.attributedTo) {
+				return 'skip: actor.uri !== note.attributedTo';
+			}
+
+			if (typeof note.id === 'string') {
+				if (this.utilityService.extractDbHost(actor.uri) !== this.utilityService.extractDbHost(note.id)) {
+					return 'skip: host in actor.uri !== note.id';
+				}
+			}
+		}
+
+		const unlock = await this.appLockService.getApLock(uri);
+
+		try {
+			const target = await this.notesRepository.findOneBy({uri: uri});
+			if (!target) return `skip: target note not located: ${uri}`;
+			await this.apNoteService.updateNote(note, target, resolver, silent);
+			return 'ok';
+		} catch (err) {
+			if (err instanceof StatusError && err.isClientError) {
+				return `skip ${err.statusCode}`;
+			} else {
+				throw err;
+			}
+		} finally {
+			unlock();
 		}
 	}
 

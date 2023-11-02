@@ -6,23 +6,26 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <div v-if="show" ref="el" :class="[$style.root, {[$style.slim]: narrow, [$style.thin]: thin_, [$style.reduceBlurEffect]: !defaultStore.state.useBlurEffect }]" :style="{ background: bg }">
 	<div v-if="!thin_ && !canBack" :class="$style.buttonsLeft">
-		<button class="_button" :class="[$style.button, $style.goBack]" @click.stop="goBack" @touchstart="preventDrag"><i class="ti ti-arrow-left"></i></button>
+		<button v-vibrate="ColdDeviceStorage.get('vibrateSystem') ? 5 : ''" class="_button" :class="[$style.button, $style.goBack]" @click.stop="goBack" @touchstart="preventDrag"><i class="ti ti-arrow-left"></i></button>
 	</div>
 	<div v-if="!thin_ && narrow && props.displayMyAvatar && $i && !isFriendly" class="_button" :class="$style.buttonsLeft" @click="openAccountMenu">
-		<MkAvatar :class="$style.avatar" :user="$i"/>
+		<MkAvatar v-vibrate="ColdDeviceStorage.get('vibrateSystem') ? 5 : ''" :class="$style.avatar" :user="$i"/>
 	</div>
 	<div v-else-if="!thin_ && narrow && !hideTitle && canBack" :class="$style.buttonsLeft"/>
 	<div v-else-if="!thin_ && canBack && (actions && actions.length > 0)" :class="$style.buttonsLeft"/>
+	<div v-if="!thin_ && canBack && (actions && actions.length === 2 && ['index', 'my-notifications', 'messaging'].includes(<string>mainRouter.currentRoute.value.name))" :class="$style.buttonsLeft"/>
 
 	<template v-if="metadata">
 		<div v-if="!hideTitle" :class="[$style.titleContainer, { [$style.titleContainer_canBack]: !canBack }]">
-			<MkAvatar v-if="metadata.avatar" :class="$style.titleAvatar" :user="metadata.avatar" indicator/>
+			<div v-if="metadata.avatar" :class="$style.titleAvatarContainer" @click="top">
+				<MkAvatar :class="$style.titleAvatar" :user="metadata.avatar" indicator/>
+			</div>
 			<i v-else-if="metadata.icon" :class="[$style.titleIcon, metadata.icon]" @click="top"></i>
 
 			<div :class="$style.title">
-				<MkUserName v-if="metadata.userName" :user="metadata.userName" :nowrap="true"/>
+				<MkUserName v-if="metadata.userName" :user="metadata.userName" :nowrap="true" @click="top"/>
 				<div v-else-if="metadata.title" @click="top">{{ metadata.title }}</div>
-				<div v-if="!narrow && metadata.subtitle" :class="$style.subtitle">
+				<div v-if="!narrow && metadata.subtitle" :class="$style.subtitle" @click="top">
 					{{ metadata.subtitle }}
 				</div>
 				<div v-if="narrow && hasTabs" :class="[$style.subtitle, $style.activeTab]" @click="showTabsPopup">
@@ -40,33 +43,31 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 	</template>
 	<div v-if="!thin_ && !narrow && (actions && actions.length > 0) && hideTitle && ['index'].includes(<string>mainRouter.currentRoute.value.name)" :class="$style.buttonsRight"/>
-	<div v-else-if="(!thin_ && narrow && !hideTitle) || (actions && actions.length > 0)" :class="$style.buttonsRight">
+	<div v-if="(!thin_ && narrow && !hideTitle) || (actions && actions.length > 0)" :class="$style.buttonsRight">
 		<template v-for="action in actions">
-			<button v-tooltip.noDelay="action.text" class="_button" :class="[$style.button, { [$style.highlighted]: action.highlighted }]" @click.stop="action.handler" @touchstart="preventDrag"><i :class="action.icon"></i></button>
+			<button v-vibrate="ColdDeviceStorage.get('vibrateSystem') ? 5 : ''" v-tooltip.noDelay="action.text" class="_button" :class="[$style.button, { [$style.highlighted]: action.highlighted }]" @click.stop="action.handler" @touchstart="preventDrag"><i :class="action.icon"></i></button>
 		</template>
 	</div>
 	<div v-else-if="!thin_ && !canBack && !(actions && actions.length > 0)" :class="$style.buttonsRight"/>
-  <div v-if="metadata && metadata.avatar && showFollowButton" :class="$style.followButton">
-    <MkFollowButton v-if="narrow" :user="metadata.avatar" :transparent="false" :full="false"/>
-    <MkFollowButton v-else :user="metadata.avatar" :transparent="false" :full="true"/>
-  </div>
+	<div v-if="metadata && metadata.avatar && showFollowButton" :class="$style.followButton">
+		<MkFollowButton v-if="mainRouter.currentRoute.value.name === 'user'" :user="metadata.avatar" :transparent="false" :full="!narrow"/>
+	</div>
 </div>
 </template>
 
 <script lang="ts" setup>
 import { onMounted, onUnmounted, ref, inject, watch, nextTick } from 'vue';
 import tinycolor from 'tinycolor2';
-import { getScrollPosition, scrollToTop } from '@/scripts/scroll';
-import { globalEvents } from '@/events';
-import { injectPageMetadata } from '@/scripts/page-metadata';
-import { $i, openAccountMenu as openAccountMenu_ } from '@/account';
-import { miLocalStorage } from '@/local-storage';
-import { mainRouter } from '@/router';
-import * as os from '@/os';
-import { i18n } from '@/i18n';
-import { defaultStore } from '@/store';
+import { getScrollPosition, scrollToTop } from '@/scripts/scroll.js';
+import { globalEvents } from '@/events.js';
+import { injectPageMetadata } from '@/scripts/page-metadata.js';
+import { $i, openAccountMenu as openAccountMenu_ } from '@/account.js';
+import { miLocalStorage } from '@/local-storage.js';
+import { mainRouter } from '@/router.js';
+import * as os from '@/os.js';
+import { i18n } from '@/i18n.js';
+import { ColdDeviceStorage, defaultStore } from '@/store.js';
 import MkFollowButton from '@/components/MkFollowButton.vue';
-import { eventBus } from '@/scripts/cherrypick/eventBus';
 
 let showFollowButton = $ref(false);
 
@@ -102,7 +103,7 @@ const emit = defineEmits<{
 
 const metadata = injectPageMetadata();
 
-const hideTitle = inject('shouldOmitHeaderTitle', false);
+const hideTitle = false;
 const thin_ = props.thin || inject('shouldHeaderThin', false);
 
 let el = $shallowRef<HTMLElement | undefined>(undefined);
@@ -137,18 +138,18 @@ const preventDrag = (ev: TouchEvent) => {
 };
 
 const top = (ev: MouseEvent) => {
-  const pos = getScrollPosition(el as HTMLElement);
-  if (el && pos !== 0) {
-    scrollToTop(el as HTMLElement, { behavior: 'smooth' });
-  } else if (pos === 0) {
-    os.popupMenu([{
-      text: i18n.ts.reload,
-      icon: 'ti ti-refresh',
-      action: () => {
-        location.reload();
-      },
-    }], ev.currentTarget ?? ev.target);
-  }
+	const pos = getScrollPosition(el as HTMLElement);
+	if (el && pos !== 0) {
+		scrollToTop(el as HTMLElement, { behavior: 'smooth' });
+	} else if (pos === 0) {
+		os.popupMenu([{
+			text: i18n.ts.reload,
+			icon: 'ti ti-refresh',
+			action: () => {
+				location.reload();
+			},
+		}], ev.currentTarget ?? ev.target);
+	}
 };
 
 function openAccountMenu(ev: MouseEvent) {
@@ -180,11 +181,11 @@ function goBack() {
 }
 
 const calcBg = () => {
-  const rawBg = 'var(--bg)';
-  const tinyBg = tinycolor(rawBg.startsWith('var(') ? getComputedStyle(document.documentElement).getPropertyValue(rawBg.slice(4, -1)) : rawBg);
-  if (narrow) tinyBg.setAlpha(1);
-  else tinyBg.setAlpha(0.85);
-  bg.value = tinyBg.toRgbString();
+	const rawBg = 'var(--bg)';
+	const tinyBg = tinycolor(rawBg.startsWith('var(') ? getComputedStyle(document.documentElement).getPropertyValue(rawBg.slice(4, -1)) : rawBg);
+	if (narrow) tinyBg.setAlpha(1);
+	else tinyBg.setAlpha(0.85);
+	bg.value = tinyBg.toRgbString();
 };
 
 let ro: ResizeObserver | null;
@@ -216,12 +217,12 @@ onMounted(() => {
 		ro.observe(el.parentElement as HTMLElement);
 	}
 
-  calcBg();
-  globalEvents.on('themeChanged', calcBg);
+	calcBg();
+	globalEvents.on('themeChanged', calcBg);
 
-  eventBus.on('showFollowButton', (showFollowButton_receive) => {
-    showFollowButton = showFollowButton_receive;
-  });
+	globalEvents.on('showFollowButton', (showFollowButton_receive) => {
+		showFollowButton = showFollowButton_receive;
+	});
 });
 
 onUnmounted(() => {
@@ -358,6 +359,16 @@ onUnmounted(() => {
 
 .titleContainer_canBack {
 	margin-left: -32px;
+}
+
+.titleAvatarContainer {
+  $size: 32px;
+  contain: strict;
+  overflow: clip;
+  width: $size;
+  height: $size;
+  padding: 8px;
+  flex-shrink: 0;
 }
 
 .titleAvatar {

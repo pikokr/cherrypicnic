@@ -12,9 +12,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { } from 'vue';
-import { instanceName } from '@/config';
-import { instance as Instance } from '@/instance';
-import { getProxiedImageUrlNullable } from '@/scripts/media-proxy';
+import { instanceName } from '@/config.js';
+import { instance as Instance } from '@/instance.js';
+import { getProxiedImageUrlNullable } from '@/scripts/media-proxy.js';
 
 const props = defineProps<{
 	instance?: {
@@ -77,6 +77,19 @@ $height: 2ex;
 	font-size: 0.9em;
 	font-weight: bold;
 	white-space: nowrap;
-	overflow: visible;
+	overflow: scroll;
+  overflow-wrap: anywhere;
+  max-width: 300px;
+  text-overflow: ellipsis;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@container (max-width: 500px) {
+  .name {
+    max-width: 100px;
+  }
 }
 </style>

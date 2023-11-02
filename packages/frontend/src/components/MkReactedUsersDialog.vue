@@ -44,10 +44,10 @@ import * as Misskey from 'cherrypick-js';
 import MkModalWindow from '@/components/MkModalWindow.vue';
 import MkReactionIcon from '@/components/MkReactionIcon.vue';
 import MkUserCardMini from '@/components/MkUserCardMini.vue';
-import { userPage } from '@/filters/user';
-import { i18n } from '@/i18n';
-import * as os from '@/os';
-import { infoImageUrl } from '@/instance';
+import { userPage } from '@/filters/user.js';
+import { i18n } from '@/i18n.js';
+import * as os from '@/os.js';
+import { infoImageUrl } from '@/instance.js';
 
 const emit = defineEmits<{
 	(ev: 'closed'): void,
@@ -93,12 +93,15 @@ onMounted(() => {
 }
 
 .tab {
-	padding: 4px 6px;
+	padding: 0 12px;
 	border: solid 1px var(--divider);
-	border-radius: 6px;
+	border-radius: 999px;
+  height: 30px;
 }
 
 .tabActive {
-	border-color: var(--accent);
+	background: var(--accentedBg);
+  color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent) inset;
 }
 </style>

@@ -5,7 +5,7 @@
 
 import { Inject, Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
-import type { UsersRepository } from '@/models/index.js';
+import type { UsersRepository } from '@/models/_.js';
 import { normalizeForSearch } from '@/misc/normalize-for-search.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
 import { DI } from '@/di-symbols.js';
@@ -66,8 +66,8 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			switch (ps.sort) {
 				case '+follower': query.orderBy('user.followersCount', 'DESC'); break;
 				case '-follower': query.orderBy('user.followersCount', 'ASC'); break;
-				case '+createdAt': query.orderBy('user.createdAt', 'DESC'); break;
-				case '-createdAt': query.orderBy('user.createdAt', 'ASC'); break;
+				case '+createdAt': query.orderBy('user.id', 'DESC'); break;
+				case '-createdAt': query.orderBy('user.id', 'ASC'); break;
 				case '+updatedAt': query.orderBy('user.updatedAt', 'DESC'); break;
 				case '-updatedAt': query.orderBy('user.updatedAt', 'ASC'); break;
 			}

@@ -6,7 +6,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Brackets } from 'typeorm';
 import { Endpoint } from '@/server/api/endpoint-base.js';
-import type { UserGroupsRepository, MessagingMessagesRepository, UserGroupJoiningsRepository } from '@/models/index.js';
+import type { UserGroupsRepository, MessagingMessagesRepository, UserGroupJoiningsRepository } from '@/models/_.js';
 import { QueryService } from '@/core/QueryService.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
 import { MessagingMessageEntityService } from '@/core/entities/MessagingMessageEntityService.js';
@@ -96,15 +96,18 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				});
 
 				const query = this.queryService.makePaginationQuery(this.messagingMessagesRepository.createQueryBuilder('message'), ps.sinceId, ps.untilId)
-					.andWhere(new Brackets(qb => { qb
-						.where(new Brackets(qb => { qb
-							.where('message.userId = :meId')
-							.andWhere('message.recipientId = :recipientId');
-						}))
-						.orWhere(new Brackets(qb => { qb
-							.where('message.userId = :recipientId')
-							.andWhere('message.recipientId = :meId');
-						}));
+					.andWhere(new Brackets(qb => {
+						qb
+							.where(new Brackets(qb => {
+								qb
+									.where('message.userId = :meId')
+									.andWhere('message.recipientId = :recipientId');
+							}))
+							.orWhere(new Brackets(qb => {
+								qb
+									.where('message.userId = :recipientId')
+									.andWhere('message.recipientId = :meId');
+							}));
 					}))
 					.setParameter('meId', me.id)
 					.setParameter('recipientId', recipient.id);

@@ -18,11 +18,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<MkChatPreview v-for="message in items" :key="message.id" :message="message"/>
 				</MkPagination>
 			</div>
-			<div v-if="!fetching && messages.length == 0" class="_fullinfo">
-				<img src="https://xn--931a.moe/assets/info.jpg" class="_ghost" alt=""/>
-				<div>{{ i18n.ts.noHistory }}</div>
-			</div>
-			<MkLoading v-if="fetching"/>
 		</div>
 	</MkSpacer>
 </MkStickyContainer>
@@ -30,14 +25,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { markRaw, onMounted, onUnmounted } from 'vue';
-import * as Acct from 'cherrypick-js/built/acct';
-import * as os from '@/os';
-import { useStream } from '@/stream';
-import { useRouter } from '@/router';
-import { i18n } from '@/i18n';
-import { definePageMetadata } from '@/scripts/page-metadata';
-import { $i } from '@/account';
-import { eventBus } from '@/scripts/cherrypick/eventBus';
+import * as Misskey from 'cherrypick-js';
+import * as os from '@/os.js';
+import { useStream } from '@/stream.js';
+import { useRouter } from '@/router.js';
+import { i18n } from '@/i18n.js';
+import { definePageMetadata } from '@/scripts/page-metadata.js';
+import { $i } from '@/account.js';
+import { globalEvents } from '@/events.js';
 import MkChatPreview from '@/components/MkChatPreview.vue';
 import MkPagination from '@/components/MkPagination.vue';
 
@@ -45,9 +40,8 @@ const router = useRouter();
 
 let tab = $ref('direct');
 
-let fetching = $ref(true);
-let messages = $ref([]);
-let connection = $ref(null);
+let messages;
+let connection;
 
 const directPagination = {
 	endpoint: 'messaging/history' as const,
@@ -104,7 +98,7 @@ function start(ev) {
 
 async function startUser() {
 	os.selectUser().then(user => {
-		router.push(`/my/messaging/${Acct.toString(user)}`);
+		router.push(`/my/messaging/@${Misskey.acct.toString(user)}`);
 	});
 }
 
@@ -144,11 +138,10 @@ onMounted(() => {
 			const _messages = userMessages.concat(groupMessages);
 			_messages.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 			messages = _messages;
-			fetching = false;
 		});
 	});
 
-	eventBus.on('openMessage', (ev) => {
+	globalEvents.on('openMessage', (ev) => {
 		start(ev);
 	});
 });

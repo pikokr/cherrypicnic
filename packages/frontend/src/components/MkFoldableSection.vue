@@ -30,11 +30,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script lang="ts" setup>
 import { onMounted, ref, shallowRef, watch } from 'vue';
 import tinycolor from 'tinycolor2';
-import { miLocalStorage } from '@/local-storage';
-import { mainRouter } from '@/router';
-import { defaultStore } from '@/store';
-import { deviceKind } from '@/scripts/device-kind';
-import { eventBus } from '@/scripts/cherrypick/eventBus';
+import { miLocalStorage } from '@/local-storage.js';
+import { mainRouter } from '@/router.js';
+import { defaultStore } from '@/store.js';
+import { deviceKind } from '@/scripts/device-kind.js';
+import { globalEvents } from '@/events.js';
 
 const MOBILE_THRESHOLD = 500;
 
@@ -96,12 +96,13 @@ onMounted(() => {
 			return getParentBg(el.parentElement);
 		}
 	}
+
 	const rawBg = getParentBg(el.value);
 	const _bg = tinycolor(rawBg.startsWith('var(') ? getComputedStyle(document.documentElement).getPropertyValue(rawBg.slice(4, -1)) : rawBg);
 	_bg.setAlpha(0.85);
 	bg.value = _bg.toRgbString();
 
-	eventBus.on('showEl', (showEl_receive) => {
+	globalEvents.on('showEl', (showEl_receive) => {
 		showEl = showEl_receive;
 	});
 });

@@ -6,7 +6,6 @@ import { type UserConfig, defineConfig } from 'vite';
 import ReactivityTransform from '@vue-macros/reactivity-transform/vite';
 
 import locales from '../../locales';
-import generateDTS from '../../locales/generateDTS';
 import meta from '../../package.json';
 import pluginUnwindCssModuleClassName from './lib/rollup-plugin-unwind-css-module-class-name';
 import pluginJson5 from './vite.json5';
@@ -29,6 +28,7 @@ const hash = (str: string, seed = 0): number => {
 };
 
 const BASE62_DIGITS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
 function toBase62(n: number): string {
 	if (n === 0) {
 		return '0';
@@ -67,10 +67,6 @@ export function getConfig(): UserConfig {
 					}),
 				]
 				: [],
-			{
-				name: 'locale:generateDTS',
-				buildStart: generateDTS,
-			},
 		],
 
 		resolve: {
@@ -99,6 +95,7 @@ export function getConfig(): UserConfig {
 
 		define: {
 			_VERSION_: JSON.stringify(meta.version),
+			_BASEDMISSKEYVERSION_: JSON.stringify(meta.basedMisskeyVersion),
 			_LANGS_: JSON.stringify(Object.entries(locales).map(([k, v]) => [k, v._lang_])),
 			_ENV_: JSON.stringify(process.env.NODE_ENV),
 			_DEV_: process.env.NODE_ENV !== 'production',
@@ -117,8 +114,8 @@ export function getConfig(): UserConfig {
 
 		build: {
 			target: [
-				'chrome108',
-				'firefox109',
+				'chrome116',
+				'firefox116',
 				'safari16',
 			],
 			manifest: 'manifest.json',

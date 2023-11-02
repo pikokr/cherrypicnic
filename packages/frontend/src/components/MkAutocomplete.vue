@@ -4,7 +4,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<div ref="rootEl" :class="$style.root" class="_popup _shadow" :style="{ zIndex }" @contextmenu.prevent="() => {}">
+<div ref="rootEl" :class="[$style.root, { _popup: !defaultStore.state.useBlurEffect || !defaultStore.state.useBlurEffectForModal || !defaultStore.state.removeModalBgColorForBlur, _popupAcrylic: defaultStore.state.useBlurEffect && defaultStore.state.useBlurEffectForModal && defaultStore.state.removeModalBgColorForBlur }]" class="_shadow" :style="{ zIndex }" @contextmenu.prevent="() => {}">
 	<ol v-if="type === 'user'" ref="suggests" :class="$style.list">
 		<li v-for="user in users" tabindex="-1" :class="$style.item" @click="complete(type, user)" @keydown="onKeydown">
 			<img :class="$style.avatar" :src="user.avatarUrl"/>
@@ -41,16 +41,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script lang="ts">
 import { markRaw, ref, shallowRef, computed, onUpdated, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
 import sanitizeHtml from 'sanitize-html';
-import contains from '@/scripts/contains';
-import { char2twemojiFilePath, char2fluentEmojiFilePath } from '@/scripts/emoji-base';
-import { acct } from '@/filters/user';
-import * as os from '@/os';
-import { MFM_TAGS } from '@/scripts/mfm-tags';
-import { defaultStore } from '@/store';
-import { emojilist, getEmojiName } from '@/scripts/emojilist';
-import { i18n } from '@/i18n';
-import { miLocalStorage } from '@/local-storage';
-import { customEmojis } from '@/custom-emojis';
+import contains from '@/scripts/contains.js';
+import { char2twemojiFilePath, char2fluentEmojiFilePath } from '@/scripts/emoji-base.js';
+import { acct } from '@/filters/user.js';
+import * as os from '@/os.js';
+import { MFM_TAGS } from '@/scripts/mfm-tags.js';
+import { defaultStore } from '@/store.js';
+import { emojilist, getEmojiName } from '@/scripts/emojilist.js';
+import { i18n } from '@/i18n.js';
+import { miLocalStorage } from '@/local-storage.js';
+import { customEmojis } from '@/custom-emojis.js';
 
 type EmojiDef = {
 	emoji: string;
@@ -127,6 +127,7 @@ export default {
 </script>
 
 <script lang="ts" setup>
+
 const props = defineProps<{
 	type: string;
 	q: string | null;

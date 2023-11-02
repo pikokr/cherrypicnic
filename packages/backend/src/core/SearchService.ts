@@ -8,9 +8,9 @@ import { In } from 'typeorm';
 import { DI } from '@/di-symbols.js';
 import type { Config } from '@/config.js';
 import { bindThis } from '@/decorators.js';
-import { MiNote } from '@/models/entities/Note.js';
-import { MiUser } from '@/models/index.js';
-import type { NotesRepository } from '@/models/index.js';
+import { MiNote } from '@/models/Note.js';
+import { MiUser } from '@/models/_.js';
+import type { NotesRepository } from '@/models/_.js';
 import { sqlLikeEscape } from '@/misc/sql-like-escape.js';
 import { QueryService } from '@/core/QueryService.js';
 import { IdService } from '@/core/IdService.js';
@@ -79,7 +79,7 @@ export class SearchService {
 	) {
 		if (meilisearch) {
 			this.meilisearchNoteIndex = meilisearch.index(`${config.meilisearch!.index}---notes`);
-			/*this.meilisearchNoteIndex.updateSettings({
+			this.meilisearchNoteIndex.updateSettings({
 				searchableAttributes: [
 					'text',
 					'cw',
@@ -100,7 +100,7 @@ export class SearchService {
 				pagination: {
 					maxTotalHits: 10000,
 				},
-			});*/
+			});
 		}
 
 		if (config.meilisearch?.scope) {
@@ -131,7 +131,7 @@ export class SearchService {
 
 			await this.meilisearchNoteIndex?.addDocuments([{
 				id: note.id,
-				createdAt: note.createdAt.getTime(),
+				createdAt: this.idService.parse(note.id).date.getTime(),
 				userId: note.userId,
 				userHost: note.userHost,
 				channelId: note.channelId,
@@ -173,6 +173,11 @@ export class SearchService {
 			if (pagination.sinceId) filter.qs.push({ op: '>', k: 'createdAt', v: this.idService.parse(pagination.sinceId).date.getTime() });
 			if (opts.userId) filter.qs.push({ op: '=', k: 'userId', v: opts.userId });
 			if (opts.channelId) filter.qs.push({ op: '=', k: 'channelId', v: opts.channelId });
+			if (opts.origin === 'local') {
+				filter.qs.push({ op: 'is null', k: 'userHost' });
+			} else if (opts.origin === 'remote') {
+				filter.qs.push({ op: 'is not null', k: 'userHost' });
+			}
 			if (opts.host) {
 				if (opts.host === '.') {
 					filter.qs.push({ op: 'is null', k: 'userHost' });

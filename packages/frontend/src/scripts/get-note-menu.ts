@@ -5,18 +5,18 @@
 
 import { defineAsyncComponent, Ref } from 'vue';
 import * as Misskey from 'cherrypick-js';
-import { claimAchievement } from './achievements';
-import { $i } from '@/account';
-import { i18n } from '@/i18n';
-import { instance } from '@/instance';
-import * as os from '@/os';
-import copyToClipboard from '@/scripts/copy-to-clipboard';
-import { url } from '@/config';
-import { defaultStore, noteActions } from '@/store';
-import { miLocalStorage } from '@/local-storage';
-import { getUserMenu } from '@/scripts/get-user-menu';
-import { clipsCache } from '@/cache';
-import { MenuItem } from '@/types/menu';
+import { claimAchievement } from './achievements.js';
+import { $i } from '@/account.js';
+import { i18n } from '@/i18n.js';
+import { instance } from '@/instance.js';
+import * as os from '@/os.js';
+import copyToClipboard from '@/scripts/copy-to-clipboard.js';
+import { url } from '@/config.js';
+import { defaultStore, noteActions } from '@/store.js';
+import { miLocalStorage } from '@/local-storage.js';
+import { getUserMenu } from '@/scripts/get-user-menu.js';
+import { clipsCache } from '@/cache.js';
+import { MenuItem } from '@/types/menu.js';
 
 export async function getNoteClipMenu(props: {
 	note: Misskey.entities.Note;
@@ -32,7 +32,7 @@ export async function getNoteClipMenu(props: {
 
 	const appearNote = isRenote ? props.note.renote as Misskey.entities.Note : props.note;
 
-	const clips = await clipsCache.fetch(() => os.api('clips/list'));
+	const clips = await clipsCache.fetch();
 	return [...clips.map(clip => ({
 		text: clip.name,
 		action: () => {
@@ -174,6 +174,10 @@ export function getNoteMenu(props: {
 		});
 	}
 
+	function edit(): void {
+		os.post({ initialNote: appearNote, renote: appearNote.renote, reply: appearNote.reply, channel: appearNote.channel, updateMode: true });
+	}
+
 	function copyEdit(): void {
 		os.confirm({
 			type: 'info',
@@ -289,10 +293,6 @@ export function getNoteMenu(props: {
 					action: unclip,
 				}, null] : []
 			), {
-				icon: 'ti ti-info-circle',
-				text: i18n.ts.details,
-				action: openDetail,
-			}, {
 				icon: 'ti ti-repeat',
 				text: i18n.ts.renotesList,
 				action: showRenotes,
@@ -300,6 +300,10 @@ export function getNoteMenu(props: {
 				icon: 'ti ti-icons',
 				text: i18n.ts.reactionsList,
 				action: showReactions,
+			}, {
+				icon: 'ti ti-info-circle',
+				text: i18n.ts.details,
+				action: openDetail,
 			}, {
 				icon: 'ti ti-copy',
 				text: i18n.ts.copyContent,
@@ -317,12 +321,17 @@ export function getNoteMenu(props: {
 				text: i18n.ts.copyAndEdit,
 				action: copyEdit,
 			} : undefined,
+			appearNote.userId === $i.id ? {
+				icon: 'ti ti-edit',
+				text: i18n.ts.deleteAndEdit,
+				action: delEdit,
+			} : undefined,
 			{
 				icon: 'ti ti-share',
 				text: i18n.ts.share,
 				action: share,
 			},
-			instance.translatorAvailable ? {
+			$i && $i.policies.canUseTranslator && instance.translatorAvailable ? {
 				icon: 'ti ti-language-hiragana',
 				text: i18n.ts.translate,
 				action: translate,
@@ -391,10 +400,10 @@ export function getNoteMenu(props: {
 			),
 			...(appearNote.userId === $i.id || $i.isModerator || $i.isAdmin ? [
 				null,
-				appearNote.userId === $i.id ? {
+				appearNote.userId === $i.id && $i.policies.canEditNote ? {
 					icon: 'ti ti-edit',
-					text: i18n.ts.deleteAndEdit,
-					action: delEdit,
+					text: i18n.ts.edit,
+					action: edit,
 				} : undefined,
 				{
 					icon: 'ti ti-trash',
@@ -407,8 +416,8 @@ export function getNoteMenu(props: {
 			.filter(x => x !== undefined);
 	} else {
 		menu = [{
-			icon: 'ti ti-external-link',
-			text: i18n.ts.detailed,
+			icon: 'ti ti-info-circle',
+			text: i18n.ts.details,
 			action: openDetail,
 		}, {
 			icon: 'ti ti-copy',

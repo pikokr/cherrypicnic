@@ -13,12 +13,13 @@ import { MetaService } from '@/core/MetaService.js';
 import { HttpRequestService } from '@/core/HttpRequestService.js';
 import { GetterService } from '@/server/api/GetterService.js';
 import { createTemp } from '@/misc/create-temp.js';
+import { RoleService } from '@/core/RoleService.js';
 import { ApiError } from '../../error.js';
 
 export const meta = {
 	tags: ['users'],
 
-	requireCredential: false,
+	requireCredential: true,
 
 	res: {
 		type: 'object',
@@ -26,6 +27,11 @@ export const meta = {
 	},
 
 	errors: {
+		unavailable: {
+			message: 'Translate of notes unavailable.',
+			code: 'UNAVAILABLE',
+			id: '50a70314-2d8a-431b-b433-efa5cc56444c',
+		},
 		noSuchDescription: {
 			message: 'No such description.',
 			code: 'NO_SUCH_DESCRIPTION',
@@ -54,8 +60,14 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private getterService: GetterService,
 		private metaService: MetaService,
 		private httpRequestService: HttpRequestService,
+		private roleService: RoleService,
 	) {
-		super(meta, paramDef, async (ps) => {
+		super(meta, paramDef, async (ps, me) => {
+			const policies = await this.roleService.getUserPolicies(me.id);
+			if (!policies.canUseTranslator) {
+				throw new ApiError(meta.errors.unavailable);
+			}
+
 			const target = await this.getterService.getUserProfiles(ps.userId).catch(err => {
 				if (err.id === '9725d0ce-ba28-4dde-95a7-2cbb2c15de24') throw new ApiError(meta.errors.noSuchDescription);
 				throw err;
@@ -98,8 +110,9 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					translator: translatorServices,
 				};
 			} else if (instance.translatorType === 'ctav3') {
-				if (instance.ctav3SaKey == null) { return 204; } else if (instance.ctav3ProjectId == null) { return 204; }
-				else if (instance.ctav3Location == null) { return 204; }
+				if (instance.ctav3SaKey == null) return 204;
+				else if (instance.ctav3ProjectId == null) return 204;
+				else if (instance.ctav3Location == null) return 204;
 				translationResult = await this.apiCloudTranslationAdvanced(
 					target.description, targetLang, instance.ctav3SaKey, instance.ctav3ProjectId, instance.ctav3Location, instance.ctav3Model, instance.ctav3Glossary, instance.translatorType,
 				);

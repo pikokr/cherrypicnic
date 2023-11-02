@@ -5,15 +5,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <MkStickyContainer>
-	<template #header><MkPageHeader v-model:tab="tab" :actions="headerActions" :tabs="headerTabs"/></template>
+	<template #header>
+		<CPPageHeader v-if="isMobile && defaultStore.state.mobileHeaderChange" v-model:tab="tab" :actions="headerActions" :tabs="headerTabs"/>
+		<MkPageHeader v-else v-model:tab="tab" :actions="headerActions" :tabs="headerTabs"/>
+	</template>
 	<div>
 		<div v-if="user">
 			<XHome v-if="tab === 'home'" :user="user"/>
-			<XTimeline v-else-if="tab === 'notes'" :user="user"/>
 			<XEvent v-else-if="tab === 'events'" :user="user"/>
 			<XActivity v-else-if="tab === 'activity'" :user="user"/>
 			<XAchievements v-else-if="tab === 'achievements'" :user="user"/>
-			<XReactions v-else-if="tab === 'reactions'" :user="user"/>
 			<XClips v-else-if="tab === 'clips'" :user="user"/>
 			<XLists v-else-if="tab === 'lists'" :user="user"/>
 			<XPages v-else-if="tab === 'pages'" :user="user"/>
@@ -27,22 +28,29 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, computed, watch } from 'vue';
+import { defineAsyncComponent, computed, watch, ref } from 'vue';
 import * as Misskey from 'cherrypick-js';
-import { acct as getAcct } from '@/filters/user';
-import * as os from '@/os';
-import { definePageMetadata } from '@/scripts/page-metadata';
-import { i18n } from '@/i18n';
-import { $i } from '@/account';
-import { getUserMenu } from '@/scripts/get-user-menu';
-import { mainRouter } from '@/router';
+import { acct as getAcct } from '@/filters/user.js';
+import * as os from '@/os.js';
+import { definePageMetadata } from '@/scripts/page-metadata.js';
+import { i18n } from '@/i18n.js';
+import { $i } from '@/account.js';
+import { getUserMenu } from '@/scripts/get-user-menu.js';
+import { mainRouter } from '@/router.js';
+import { defaultStore } from '@/store.js';
+import { deviceKind } from '@/scripts/device-kind.js';
+
+const MOBILE_THRESHOLD = 500;
+
+const isMobile = ref(deviceKind === 'smartphone' || window.innerWidth <= MOBILE_THRESHOLD);
+window.addEventListener('resize', () => {
+	isMobile.value = deviceKind === 'smartphone' || window.innerWidth <= MOBILE_THRESHOLD;
+});
 
 const XHome = defineAsyncComponent(() => import('./home.vue'));
-const XTimeline = defineAsyncComponent(() => import('./index.timeline.vue'));
 const XEvent = defineAsyncComponent(() => import('./events.vue'));
 const XActivity = defineAsyncComponent(() => import('./activity.vue'));
 const XAchievements = defineAsyncComponent(() => import('./achievements.vue'));
-const XReactions = defineAsyncComponent(() => import('./reactions.vue'));
 const XClips = defineAsyncComponent(() => import('./clips.vue'));
 const XLists = defineAsyncComponent(() => import('./lists.vue'));
 const XPages = defineAsyncComponent(() => import('./pages.vue'));
@@ -85,10 +93,6 @@ const headerTabs = $computed(() => user ? [{
 	title: i18n.ts.overview,
 	icon: 'ti ti-home',
 }, {
-	key: 'notes',
-	title: i18n.ts.notes,
-	icon: 'ti ti-pencil',
-}, {
 	key: 'events',
 	title: i18n.ts.events,
 	icon: 'ti ti-calendar',
@@ -100,11 +104,7 @@ const headerTabs = $computed(() => user ? [{
 	key: 'achievements',
 	title: i18n.ts.achievements,
 	icon: 'ti ti-medal',
-}] : []), ...($i && ($i.id === user.id)) || user.publicReactions ? [{
-	key: 'reactions',
-	title: i18n.ts.reaction,
-	icon: 'ti ti-mood-happy',
-}] : [], {
+}] : []), {
 	key: 'clips',
 	title: i18n.ts.clips,
 	icon: 'ti ti-paperclip',

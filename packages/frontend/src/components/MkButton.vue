@@ -34,6 +34,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { nextTick, onMounted } from 'vue';
+import { vibrate } from '@/scripts/vibrate.js';
+import { ColdDeviceStorage } from '@/store.js';
 
 const props = defineProps<{
 	type?: 'button' | 'submit' | 'reset';
@@ -98,6 +100,8 @@ function onMousedown(evt: MouseEvent): void {
 	const circleCenterY = evt.clientY - rect.top;
 
 	const scale = calcCircleScale(target.clientWidth, target.clientHeight, circleCenterX, circleCenterY);
+
+	vibrate(ColdDeviceStorage.get('vibrateSystem') ? 10 : '');
 
 	window.setTimeout(() => {
 		ripple.style.transform = 'scale(' + (scale / 2) + ')';

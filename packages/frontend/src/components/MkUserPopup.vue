@@ -11,7 +11,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	:leaveToClass="defaultStore.state.animation ? $style.transition_popup_leaveTo : ''"
 	appear @afterLeave="emit('closed')"
 >
-	<div v-if="showing" :class="$style.root" class="_popup _shadow" :style="{ zIndex, top: top + 'px', left: left + 'px' }" @mouseover="() => { emit('mouseover'); }" @mouseleave="() => { emit('mouseleave'); }">
+	<div v-if="showing" :class="[$style.root, { _popup: !defaultStore.state.useBlurEffect || !defaultStore.state.useBlurEffectForModal || !defaultStore.state.removeModalBgColorForBlur, _popupAcrylic: defaultStore.state.useBlurEffect && defaultStore.state.useBlurEffectForModal && defaultStore.state.removeModalBgColorForBlur }]" class="_shadow" :style="{ zIndex, top: top + 'px', left: left + 'px' }" @mouseover="() => { emit('mouseover'); }" @mouseleave="() => { emit('mouseleave'); }">
 		<div v-if="user != null">
 			<div :class="$style.banner" :style="user.bannerUrl ? `background-image: url(${user.bannerUrl})` : ''">
 				<span v-if="$i && $i.id != user.id && user.isFollowed" :class="$style.followed">{{ i18n.ts.followsYou }}</span>
@@ -45,7 +45,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</div>
 			</div>
 			<button class="_button" :class="$style.menu" @click="showMenu"><i class="ti ti-dots"></i></button>
-			<MkFollowButton v-if="$i && user.id != $i.id" :class="$style.follow" :user="user" mini/>
+			<MkFollowButton v-if="$i && user.id != $i.id" v-model:user="user" :class="$style.follow" mini/>
 		</div>
 		<div v-else>
 			<MkLoading/>
@@ -58,14 +58,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { onMounted } from 'vue';
 import * as Misskey from 'cherrypick-js';
 import MkFollowButton from '@/components/MkFollowButton.vue';
-import { userPage } from '@/filters/user';
-import * as os from '@/os';
-import { getUserMenu } from '@/scripts/get-user-menu';
-import number from '@/filters/number';
-import { i18n } from '@/i18n';
-import { defaultStore } from '@/store';
-import { $i } from '@/account';
-import { isFfVisibleForMe } from '@/scripts/isFfVisibleForMe';
+import { userPage } from '@/filters/user.js';
+import * as os from '@/os.js';
+import { getUserMenu } from '@/scripts/get-user-menu.js';
+import number from '@/filters/number.js';
+import { i18n } from '@/i18n.js';
+import { defaultStore } from '@/store.js';
+import { $i } from '@/account.js';
+import { isFfVisibleForMe } from '@/scripts/isFfVisibleForMe.js';
 
 const props = defineProps<{
 	showing: boolean;

@@ -8,14 +8,14 @@
  * 各種操作
  */
 import * as Misskey from 'cherrypick-js';
-import type { SwMessage, SwMessageOrderType } from '@/types';
-import { getAccountFromId } from '@/scripts/get-account-from-id';
-import { getUrlWithLoginId } from '@/scripts/login-id';
+import type { SwMessage, SwMessageOrderType } from '@/types.js';
+import { getAccountFromId } from '@/scripts/get-account-from-id.js';
+import { getUrlWithLoginId } from '@/scripts/login-id.js';
 
 export const cli = new Misskey.api.APIClient({ origin, fetch: (...args): Promise<Response> => fetch(...args) });
 
 export async function api<E extends keyof Misskey.Endpoints, O extends Misskey.Endpoints[E]['req']>(endpoint: E, userId?: string, options?: O): Promise<void | ReturnType<typeof cli.request<E, O>>> {
-	let account: { token: string; id: string } | void;
+	let account: { token: string; id: string } | void = undefined;
 
 	if (userId) {
 		account = await getAccountFromId(userId);
@@ -55,7 +55,7 @@ export function openAntenna(antennaId: string, loginId: string): ReturnType<type
 
 export async function openChat(body: any, loginId: string) {
 	if (body.groupId === null) {
-		return openClient('push', `/my/messaging/${getAcct(body.user)}`, loginId, { body });
+		return openClient('push', `/my/messaging/@${Misskey.acct.toString(body.user)}`, loginId, { body });
 	} else {
 		return openClient('push', `/my/messaging/group/${body.groupId}`, loginId, { body });
 	}
